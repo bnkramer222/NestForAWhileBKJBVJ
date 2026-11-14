@@ -1,26 +1,32 @@
 <%- include('partials/head') %>
 
 <section class="hero">
-  <p class="eyebrow">Floor at capacity</p>
-  <h1>You are in line.</h1>
+  <p class="eyebrow">It's busy right now</p>
+  <h1>You're in line, <%= clientName %>.</h1>
   <p class="lead">
-    <%= clientName %>, the market floor is full right now. Your place is held — no need to stand at the desk.
+    The market floor is full, so we're holding your place. No need to stand at the desk —
+    keep this page open and it will take you straight to your shopping list when it's your turn.
   </p>
 </section>
 
-<section class="card card--elevated queue-card">
-  <p class="queue-position"><span><%= position %></span></p>
-  <p class="muted">households ahead of you: <strong><%= Math.max(position - 1, 0) %></strong></p>
-  <p class="muted small">This page refreshes every 20 seconds. When a slot opens you are admitted automatically and this page takes you to your shopping list.</p>
-  <p>
-    <a class="btn btn--ghost" href="/queue?token=<%= refreshToken %>">Refresh now</a>
+<section class="card card--elevated queue-card" id="queue-app" data-token="<%= refreshToken %>">
+  <p class="muted small">Your place in line</p>
+  <p class="queue-position"><span id="queue-pos"><%= position %></span></p>
+  <p id="queue-ahead" class="muted">
+    <% if (position <= 1) { %>You're next!<% } else { %><strong><%= position - 1 %></strong> <%= position - 1 === 1 ? 'household' : 'households' %> ahead of you<% } %>
   </p>
+  <p class="muted small">
+    <span class="live-dot" aria-hidden="true"></span>
+    Updating live · <%= floor.active %> of <%= floor.max %> shoppers on the floor
+  </p>
+  <p id="queue-status" class="notice" role="status" hidden></p>
   <form method="post" action="/queue/leave">
     <input type="hidden" name="token" value="<%= refreshToken %>">
     <button type="submit" class="btn btn--ghost">Leave the line</button>
   </form>
 </section>
 
-<meta http-equiv="refresh" content="20;url=/queue?token=<%= refreshToken %>">
+<%# Fallback for browsers without JavaScript: reload every 30 seconds. %>
+<meta http-equiv="refresh" content="30;url=/queue?token=<%= refreshToken %>">
 
 <%- include('partials/foot') %>

@@ -46,60 +46,61 @@ export const checkIn = ah(async (req, res) => {
     });
   }
 
-  // Re-check-in (or a queued household that was just admitted): reuse the open session
-  // instead of claiming a second slot or joining the line twice.
-  const open = await sessionModel.findOpenSessionForClient(client.id);
-  if (open?.status === 'active') {
-    req.session.shopping = { id: open.id, token: open.session_token, clientId: client.id };
-    return res.redirect(303, '/shop');
-  }
-  if (open?.status === 'queue_waiting') {
-    return res.redirect(303, `/queue?token=${encodeURIComponent(open.session_token)}`);
-  }
-
-  const slot = await sessionModel.claimFloorSlot();
-  if (!slot) {
-    const queued = await sessionModel.enqueue(client.id);
-    const position = await sessionModel.getLivePosition(queued.session_token);
-    return res.status(202).render('queue', {
-      title: 'Waiting list',
-      clientName: client.name,
-      position: position || queued.queue_position,
-      refreshToken: queued.session_token,
-    });
-  }
-
+  // One locked step: reuse an open session, take a free slot, or join the back of the line.
   const tier = resolveTier(client.conditions);
-  const sessionRow = await sessionModel.createSession({ clientId: client.id, dietaryTierId: tier.id });
-
-  req.session.shopping = {
-    id: sessionRow.id,
-    token: sessionRow.session_token,
-    clientId: client.id,
-  };
-
-  res.redirect(303, '/shop');
-});
-
-export const showQueueStatus = ah(async (req, res) => {
-  const token = req.query.token;
-  if (!token) return res.redirect('/kiosk');
-  const session = await sessionModel.getSessionByToken(token);
-  if (!session) return res.redirect('/kiosk');
+  const session = await sessionModel.checkInToFloor({ clientId: client.id, dietaryTierId: tier.id });
 
   if (session.status === 'active') {
-    // Admitted from the line: start shopping on this device without re-entering the token.
+    req.session.shopping = { id: session.id, token: session.session_token, clientId: client.id };
+    return res.redirect(303, '/shop');
+  }
+  // Redirect (not render) so the waiting page has its own URL and survives refreshes.
+  return res.redirect(303, `/queue?token=${encodeURIComponent(session.session_token)}`);
+});
+
+async function queueStatus(token) {
+  const session = token ? await sessionModel.getSessionByToken(token) : null;
+  if (!session) return null;
+  if (session.status === 'queue_waiting') await sessionModel.touchSession(session.id);
+  const position = session.status === 'queue_waiting' ? await sessionModel.getLivePosition(token) : 0;
+  return { session, position };
+}
+
+export const showQueueStatus = ah(async (req, res) => {
+  const token = String(req.query.token || '').trim();
+  const result = await queueStatus(token);
+  if (!result) return res.redirect('/kiosk');
+  const { session, position } = result;
+
+  if (session.status === 'active') {
+    // Admitted from the line: start shopping on this device without re-entering the code.
     req.session.shopping = { id: session.id, token: session.session_token, clientId: session.client_id };
     return res.redirect('/shop');
   }
-  if (session.status !== 'queue_waiting') return res.redirect('/kiosk');
+  if (session.status !== 'queue_waiting') {
+    return res.render('error', {
+      title: 'Your spot has ended',
+      status: 410,
+      message: "This place in line is no longer active. Check in again at the kiosk and we'll get you right back in line.",
+    });
+  }
 
+  const floor = await sessionModel.getFloorState();
   res.render('queue', {
     title: 'Waiting list',
-    clientName: decrypt(session.full_name_enc) || 'Your household',
-    position: await sessionModel.getLivePosition(token),
+    bodyClass: 'queue',
+    clientName: (decrypt(session.full_name_enc) || 'friend').split(' ')[0],
+    position,
+    floor,
     refreshToken: token,
   });
+});
+
+/** Polled by the waiting page every few seconds (also acts as the "still here" heartbeat). */
+export const apiQueueStatus = ah(async (req, res) => {
+  const result = await queueStatus(String(req.params.token || '').trim());
+  if (!result) return res.status(404).json({ error: 'Unknown place in line.' });
+  res.json({ status: result.session.status, position: result.position });
 });
 
 export const leaveLine = ah(async (req, res) => {

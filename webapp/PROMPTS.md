@@ -398,3 +398,19 @@ checkout says processing even though it processed. title is bad, st aug is bad, 
 ```
 
 > Outcome: Claude reproduced the stuck checkout in a headless browser (CSS `display` on `.btn` overrode the `hidden` attribute; fixed globally). App renamed "Nourish by Epic Cure" via one config file (`src/config/brand.js`), location removed. Cart quantity +/− controls and a PATCH endpoint. Not-recommended items can be added after a gentle confirmation and are still caught by the checkout hard stop (US-4.1). New `/barcodes` page with Code 128 shelf tags for all 107 products and QR client cards; kiosk can scan a card; new sign-ups get a QR card. Shopper wording rewritten in plain language (no ICD codes shown to shoppers). Verified with a Playwright browser test: 20 checks pass, scanner library decodes the generated barcodes and QR codes.
+
+## 012 — 2026-11-14 (Claude)
+
+```text
+works pretty well rn, optional allergens dont show, can we do some other thing other than text boxes for allergen
+```
+
+> Outcome: Claude found that allergy matching was exact text, so typed words like "milk" or "peanut" never matched the catalog flags (`dairy`, `peanuts`). Added `src/lib/allergens.js` (canonical list, synonyms, gluten→wheat), replaced the text box with tap-to-select chips plus an optional "Something else" field, and now show allergies on the shop page and the volunteer checkout screen. 4 new unit tests (27/27 passing) and a browser test of the full sign-up → shop → checkout flow.
+
+## 013 — 2026-11-14 (Claude)
+
+```text
+can you also fix the queue it doesnt work properly i think, i will then put the fixes out
+```
+
+> Outcome: Claude reproduced the queue with four simulated shoppers in a browser. Bugs: the waiting page was rendered at the POST URL (`/kiosk/check-in`), so a refresh showed "Page not found"; shoppers who walked away held floor slots forever; the floor counter could drift; capacity was hard-coded (MAX_FLOOR_CAPACITY ignored). Rebuilt floor/queue as one transaction under a Postgres advisory lock with the counter re-derived from real sessions; strict FIFO; heartbeat (`last_seen_at`) with auto-release after inactivity plus a 1-minute sweep; waiting page now has its own URL, updates live every 5 s, auto-advances to the shop, and backs off on weak Wi-Fi; dashboard panel to set capacity, see the (anonymous) line, and release inactive sessions. Verified: 12 browser scenarios pass; 12 simultaneous check-ins at capacity 3 → exactly 3 on the floor, 9 in line.

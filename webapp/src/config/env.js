@@ -15,6 +15,9 @@ export const env = {
   sessionSecret: process.env.SESSION_SECRET || 'dev-only-change-me',
   phiKey: process.env.PHI_KEY || '',
   maxFloorCapacity: Number(process.env.MAX_FLOOR_CAPACITY || 25),
+  // Minutes of inactivity before a shopper's floor slot / a place in line is released.
+  shoppingTimeoutMin: Number(process.env.SHOPPING_TIMEOUT_MIN || 120),
+  queueTimeoutMin: Number(process.env.QUEUE_TIMEOUT_MIN || 15),
 
   // System of Intelligence. provider: groq | hf | ollama | none
   aiProvider: (process.env.AI_PROVIDER || '').toLowerCase(),

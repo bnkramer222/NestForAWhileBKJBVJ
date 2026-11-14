@@ -91,6 +91,10 @@ async function run() {
   const sql = await fs.readFile(path.join(root, 'db/seed.sql'), 'utf8');
   console.log('[seed] applying reference data (db/seed.sql)');
   await pool.query(sql);
+  if (process.env.MAX_FLOOR_CAPACITY) {
+    await pool.query('UPDATE floor_state SET max_floor_capacity = $1 WHERE id = 1', [Number(process.env.MAX_FLOOR_CAPACITY)]);
+    console.log(`[seed] floor capacity set to ${process.env.MAX_FLOOR_CAPACITY} (MAX_FLOOR_CAPACITY)`);
+  }
 
   console.log('[seed] inserting personas with encrypted names');
   for (const persona of personas) {

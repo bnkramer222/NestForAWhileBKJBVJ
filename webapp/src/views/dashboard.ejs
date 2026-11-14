@@ -15,6 +15,41 @@
   <article class="stat"><span class="stat-value"><%= summary.expiring_lots %></span><span class="stat-label">lots expiring ≤ 7d</span></article>
 </section>
 
+<% if (flash) { %><div class="banner" role="status"><%= flash %></div><% } %>
+
+<section class="card" id="floor">
+  <div class="card-head">
+    <h2>Floor &amp; waiting line</h2>
+    <span class="pill"><%= floor.active %> / <%= floor.max %> on the floor · <%= floor.queued %> waiting</span>
+  </div>
+  <div class="grid grid--two">
+    <div>
+      <form method="post" action="/dashboard/floor/capacity" class="stack">
+        <label for="max_floor_capacity">Max shoppers on the floor</label>
+        <div class="input-row">
+          <input id="max_floor_capacity" name="max_floor_capacity" type="number" min="1" max="500" value="<%= floor.max %>" required>
+          <button type="submit" class="btn btn--primary">Save</button>
+        </div>
+        <p class="muted small">Tip for demos: set this to 1, check in two clients, and the second joins the line. Raising it admits people right away.</p>
+      </form>
+      <form method="post" action="/dashboard/floor/sweep">
+        <button type="submit" class="btn btn--ghost btn--sm">Release inactive sessions now</button>
+      </form>
+    </div>
+    <div>
+      <table class="table">
+        <thead><tr><th>#</th><th>Household</th><th>Waiting</th></tr></thead>
+        <tbody>
+          <% queue.forEach(function (row) { %>
+            <tr><td><%= row.position %></td><td><%= row.household_size %> people</td><td><%= row.waiting_min %> min</td></tr>
+          <% }) %>
+          <% if (!queue.length) { %><tr><td colspan="3" class="muted">Nobody is waiting.</td></tr><% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
 <section class="card">
   <div class="card-head">
     <h2>Clinical outcome trends</h2>

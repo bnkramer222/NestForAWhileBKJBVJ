@@ -1,6 +1,6 @@
 import { Router } from 'express';
 
-import { showKiosk, checkIn, showQueueStatus, leaveLine } from '../controllers/kiosk.controller.js';
+import { showKiosk, checkIn, showQueueStatus, apiQueueStatus, leaveLine } from '../controllers/kiosk.controller.js';
 import {
   showShop,
   scanItem,
@@ -18,7 +18,7 @@ import {
   apiRemove,
   apiComplete,
 } from '../controllers/checkout.controller.js';
-import { showDashboard, exportCsv } from '../controllers/dashboard.controller.js';
+import { showDashboard, exportCsv, setCapacity, sweepNow } from '../controllers/dashboard.controller.js';
 import { health } from '../controllers/health.controller.js';
 import { showBarcodes } from '../controllers/demo.controller.js';
 import { showEnroll, submitEnroll } from '../controllers/enrollment.controller.js';
@@ -34,6 +34,7 @@ router.get('/kiosk', showKiosk);
 router.post('/kiosk/check-in', checkIn);
 router.get('/queue', showQueueStatus);
 router.post('/queue/leave', leaveLine);
+router.get('/api/queue/:token', apiQueueStatus);
 
 // Epic 2 — client profile creation (US-2.1)
 router.get('/enroll', showEnroll);
@@ -49,6 +50,8 @@ router.get('/checkout', showCheckout);
 // Epic 5 — analytics
 router.get('/dashboard', showDashboard);
 router.get('/dashboard/export/:report.csv', exportCsv);
+router.post('/dashboard/floor/capacity', setCapacity);
+router.post('/dashboard/floor/sweep', sweepNow);
 
 // JSON API used by the mobile shopping companion and volunteer terminal
 router.post('/api/scan', scanItem);

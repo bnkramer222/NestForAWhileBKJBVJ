@@ -6,6 +6,7 @@ import { evaluateItem, synthesizeRecipes } from '../services/aiEngine.js';
 import QRCode from 'qrcode';
 import { ah } from '../lib/asyncHandler.js';
 import { STATUS_COPY, CATEGORY_COPY } from '../lib/shopperCopy.js';
+import { allergenLabel } from '../lib/allergens.js';
 import { badRequest, conflict, unauthorized } from '../lib/httpError.js';
 
 async function loadContext(req) {
@@ -20,6 +21,8 @@ async function loadContext(req) {
 
   const client = await clientModel.findById(shopping.clientId);
   if (!client) return null;
+
+  await sessionModel.touchSession(shopping.id); // still shopping — keep the floor slot
 
   return { shopping, sessionRow, client };
 }
@@ -78,6 +81,7 @@ export const showShop = ah(async (req, res) => {
     bodyClass: 'shop',
     shopper: ctx.client,
     firstName: String(ctx.client.name || '').split(' ')[0] || 'there',
+    allergyLabels: (ctx.client.allergies || []).map(allergenLabel),
     tier: recommendations.tier,
     needs: recommendations.needs,
     recommendations: recommendations.items,

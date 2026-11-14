@@ -136,6 +136,11 @@ CREATE TABLE IF NOT EXISTS shopping_sessions (
 
 CREATE INDEX IF NOT EXISTS idx_sessions_status ON shopping_sessions(status, started_at);
 
+-- Heartbeat for the floor/queue: shoppers who walk away without checking out (or close the
+-- waiting page) are expired automatically so their floor slot or place in line is released.
+ALTER TABLE shopping_sessions ADD COLUMN IF NOT EXISTS last_seen_at timestamptz NOT NULL DEFAULT now();
+CREATE INDEX IF NOT EXISTS idx_sessions_seen ON shopping_sessions(status, last_seen_at);
+
 CREATE TABLE IF NOT EXISTS cart_items (
   id               uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   session_id       uuid NOT NULL REFERENCES shopping_sessions(id) ON DELETE CASCADE,

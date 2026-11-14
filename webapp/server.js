@@ -4,6 +4,7 @@ import { env } from './src/config/env.js';
 import { brand } from './src/config/brand.js';
 import { db } from './src/config/db.js';
 import { getProviderConfig } from './src/services/aiEngine.js';
+import * as sessionModel from './src/models/session.model.js';
 
 const app = createApp();
 
@@ -15,6 +16,19 @@ const server = app.listen(env.port, () => {
     `[boot] AI engine: ${ai.configured ? `${ai.provider} · ${ai.model}` : `local fallback (${ai.reason || 'not configured'})`}`,
   );
 });
+
+// Every minute: release floor slots / places in line held by people who walked away, and admit
+// the next households. (Checkouts and exits admit immediately; this catches the rest.)
+const sweep = setInterval(async () => {
+  if (!db.enabled) return;
+  try {
+    const result = await sessionModel.sweepFloor();
+    if (result.expired || result.admitted) console.log('[floor] sweep', result);
+  } catch (err) {
+    console.warn('[floor] sweep failed', err.message);
+  }
+}, 60_000);
+sweep.unref();
 
 async function shutdown(signal) {
   console.log(`[shutdown] ${signal} received`);

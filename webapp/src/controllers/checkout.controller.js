@@ -3,6 +3,7 @@ import * as productModel from '../models/product.model.js';
 import * as sessionModel from '../models/session.model.js';
 import { evaluateItem } from '../services/aiEngine.js';
 import { ah } from '../lib/asyncHandler.js';
+import { allergenLabel } from '../lib/allergens.js';
 import { badRequest, notFound } from '../lib/httpError.js';
 
 async function loadByToken(rawToken) {
@@ -10,6 +11,7 @@ async function loadByToken(rawToken) {
   if (!token) return null;
   const session = await sessionModel.getSessionByToken(token);
   if (!session) return null;
+  await sessionModel.touchSession(session.id); // at the exit terminal — don't expire mid-checkout
   const client = await clientModel.findById(session.client_id);
   return { session, client };
 }
@@ -32,6 +34,7 @@ export const showCheckout = ah(async (req, res) => {
     clientName: ctx?.client?.name || null,
     sessionStatus: ctx?.session?.status || null,
     tierLabel: ctx?.client ? ctx.client.conditions.join(', ') : null,
+    allergyLabels: ctx?.client ? (ctx.client.allergies || []).map(allergenLabel) : [],
   });
 });
 

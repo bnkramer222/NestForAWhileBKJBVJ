@@ -1,17 +1,21 @@
 import * as analyticsModel from '../models/analytics.model.js';
 import * as productModel from '../models/product.model.js';
+import * as sessionModel from '../models/session.model.js';
 import { ah } from '../lib/asyncHandler.js';
 import { sendCsv } from '../lib/csv.js';
 import { badRequest } from '../lib/httpError.js';
 
 export const showDashboard = ah(async (req, res) => {
-  const [summary, distribution, grants, replenishment, expiring, outcomes] = await Promise.all([
+  await sessionModel.sweepFloor(); // show an up-to-date floor
+  const [summary, distribution, grants, replenishment, expiring, outcomes, floor, queue] = await Promise.all([
     analyticsModel.getProgramSummary(),
     analyticsModel.getDistributionByCategory(),
     analyticsModel.getGrantAttribution(),
     productModel.listNeedsReplenishment(),
     productModel.listExpiringLots(7),
     analyticsModel.getOutcomeTrends(),
+    sessionModel.getFloorState(),
+    sessionModel.listQueue(),
   ]);
 
   res.render('dashboard', {
@@ -23,7 +27,24 @@ export const showDashboard = ah(async (req, res) => {
     replenishment,
     expiring,
     outcomes,
+    floor,
+    queue,
+    flash: req.query.msg ? String(req.query.msg).slice(0, 160) : null,
   });
+});
+
+/** Manager control: set Max_Floor_Capacity (lower it to 1 to demo the waiting line). */
+export const setCapacity = ah(async (req, res) => {
+  const max = Math.floor(Number(req.body.max_floor_capacity));
+  if (!Number.isFinite(max) || max < 1 || max > 500) throw badRequest('Capacity must be a whole number from 1 to 500.');
+  const { admitted } = await sessionModel.setFloorCapacity(max);
+  const msg = `Floor capacity set to ${max}.` + (admitted ? ` ${admitted} household(s) admitted from the line.` : '');
+  res.redirect(303, '/dashboard?msg=' + encodeURIComponent(msg) + '#floor');
+});
+
+export const sweepNow = ah(async (req, res) => {
+  const { expired, admitted } = await sessionModel.sweepFloor();
+  res.redirect(303, '/dashboard?msg=' + encodeURIComponent(`Released ${expired} inactive session(s), admitted ${admitted}.`) + '#floor');
 });
 
 const today = () => new Date().toISOString().slice(0, 10);

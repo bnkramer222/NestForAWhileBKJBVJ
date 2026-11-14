@@ -329,3 +329,20 @@ div.camera video { width: 100% !important; border-radius: 10px; }
   .code-card { page-break-inside: avoid; }
 }
 .card-qr { display: block; background: #fff; padding: 6px; border-radius: 8px; }
+
+/* ---------- tap-to-select chips (allergies) ---------- */
+.chip-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.chip { position: relative; cursor: pointer; }
+.chip input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.chip > span { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.55rem 0.95rem; border: 1.5px solid var(--sand-200); border-radius: 999px; background: #fff; font-size: 0.95rem; transition: background 0.15s, border-color 0.15s; user-select: none; }
+.chip:hover > span { border-color: var(--green-500); }
+.chip input:checked + span { background: var(--green-100); border-color: var(--green-700); color: var(--green-900); font-weight: 600; }
+.chip input:checked + span::after { content: '✓'; }
+.chip input:focus-visible + span { outline: 3px solid var(--green-500); outline-offset: 2px; }
+.allergy-line { margin: 0.4rem 0 0; font-size: 0.92rem; }
+.text-alert { color: var(--red-700); }
+
+/* ---------- live waiting line ---------- */
+.live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--green-500); margin-right: 0.35rem; animation: pulse 1.6s infinite; vertical-align: middle; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+@media (prefers-reduced-motion: reduce) { .live-dot { animation: none; } }

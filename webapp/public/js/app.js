@@ -119,6 +119,41 @@
     button.addEventListener('click', function () { window.print(); });
   });
 
+  /* ---------------- waiting line: live position, auto-advance when admitted ---------------- */
+  const queueApp = document.getElementById('queue-app');
+  if (queueApp) {
+    const qToken = queueApp.dataset.token;
+    const posEl = document.getElementById('queue-pos');
+    const aheadEl = document.getElementById('queue-ahead');
+    const statusEl = document.getElementById('queue-status');
+    let failures = 0;
+    const poll = function () {
+      request('/api/queue/' + encodeURIComponent(qToken))
+        .then(function (data) {
+          failures = 0;
+          statusEl.hidden = true;
+          if (data.status === 'active') {
+            statusEl.hidden = false;
+            statusEl.textContent = "It's your turn! Taking you to your shopping list…";
+            window.location.href = '/queue?token=' + encodeURIComponent(qToken);
+            return;
+          }
+          if (data.status !== 'queue_waiting') { window.location.href = '/queue?token=' + encodeURIComponent(qToken); return; }
+          posEl.textContent = data.position;
+          const ahead = Math.max(data.position - 1, 0);
+          aheadEl.textContent = ahead === 0 ? "You're next!" : ahead + (ahead === 1 ? ' household' : ' households') + ' ahead of you';
+          setTimeout(poll, 5000);
+        })
+        .catch(function () {
+          failures += 1;
+          statusEl.hidden = false;
+          statusEl.textContent = 'Weak signal — still holding your place. Retrying…';
+          setTimeout(poll, Math.min(30000, 5000 * failures)); // back off on bad warehouse Wi-Fi
+        });
+    };
+    setTimeout(poll, 5000);
+  }
+
   /* ---------------- shopping companion ---------------- */
   const shop = document.getElementById('shop-app');
   if (shop) {
@@ -380,6 +415,12 @@
     });
 
     renderShopCart();
+
+    /* Heartbeat: keeps this shopper's floor slot while the page is open (slots of people who
+       walk away are released after SHOPPING_TIMEOUT_MIN). Also refreshes the cart. */
+    setInterval(function () {
+      request('/api/cart').then(function (data) { cart = data.cart; renderShopCart(); }).catch(function () {});
+    }, 120000);
   }
 
   /* ---------------- volunteer exit terminal ---------------- */
