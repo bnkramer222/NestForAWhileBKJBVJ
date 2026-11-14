@@ -1,55 +1,53 @@
 # System of Intelligence — Contract v1
 
-The web app (System of Record) and the AI engine (System of Intelligence) are separate services.
-This contract is fixed on the web side; the engine must conform.
+The web app (System of Record) and a model (System of Intelligence) are separate concerns.
+Green/yellow/red is **always** decided by `src/services/dietaryMatrix.js`; the model only
+synthesizes recipes and explains clinical fit.
 
-## Rules
+## Provider decision (documented rule risk)
 
-- Open-source, open-weight model only. No OpenAI/Anthropic/commercial API, no paid tier.
-- The engine is **advisory**. Green/yellow/red is decided by `src/services/dietaryMatrix.js`.
-- If the engine is slow, offline, or returns an invalid shape, the web app falls back to the
-  deterministic local synthesizer. The warehouse never stops working.
-- Every call is logged to `ai_inference_log` (latency, ok flag) for the evaluation section.
+| Option | Verdict |
+|---|---|
+| Ollama (local) | Cleanest "open-source and free" story; **cannot run on Render's free tier**. Default for local development and offline demo. |
+| Groq free tier (open-weight Llama) | Reachable from the deployed Render service, zero cost, OpenAI-compatible JSON mode. **Chosen for the deployed demo** with a documented rate-limit caveat. |
+| Hugging Face router | Supported as a fallback/secondary provider; free quota is limited and model availability varies. |
 
-## Request
+`AI_PROVIDER=groq` is the deployed choice; `AI_PROVIDER=ollama` is the local/demo-safe choice.
+Because Groq publishes rate limits, the adapter **never depends on the model**: every failure path
+degrades to deterministic local synthesis, and the UI labels the source. This is disclosed in
+`docs/RISKS-AND-ASSUMPTIONS.md` rather than hidden.
 
-```http
-POST {AI_ENGINE_URL}
-Content-Type: application/json
-```
+## Wire format
+
+All three providers use chat-completion semantics with JSON mode.
+
+| Provider | Endpoint | JSON mode | Auth |
+|---|---|---|---|
+| groq | `POST {base}/chat/completions` | `response_format: {type: "json_object"}` | `Authorization: Bearer $AI_API_KEY` |
+| hf | `POST {base}/chat/completions` | same (retried without it on HTTP 400) | `Authorization: Bearer $HF_TOKEN` |
+| ollama | `POST {base}/api/chat` | `format: "json"`, `stream: false` | none |
+
+Request body (OpenAI-compatible shape):
 
 ```json
 {
-  "contractVersion": "1.0",
-  "model": "llama3.1:8b-instruct-q4_K_M",
-  "task": "recipe-synthesis",
-  "context": {
-    "profile": {
-      "tierId": "ckd+diabetes+hypertension",
-      "tierLabel": "Triple chronicity (renal + diabetes + hypertension)",
-      "conditions": ["ckd", "diabetes", "hypertension"],
-      "allergies": ["dairy"],
-      "householdSize": 5
-    },
-    "cart": [
-      { "sku": "100102", "name": "Baby spinach", "quantity": 2 }
-    ],
-    "inventory": [
-      {
-        "sku": "100201",
-        "name": "Boneless chicken breast",
-        "category": "protein",
-        "aisle": "B",
-        "shelf": "1",
-        "bin": "B01",
-        "on_hand": 24
-      }
-    ]
-  }
+  "model": "llama-3.3-70b-versatile",
+  "temperature": 0.2,
+  "max_tokens": 900,
+  "messages": [
+    { "role": "system", "content": "<schema + clinical rules>" },
+    { "role": "user", "content": "{...profile, cart, inventory with per-item status...}" }
+  ],
+  "response_format": { "type": "json_object" }
 }
 ```
 
-## Response
+The system prompt carries the schema and the safety rules (only inventory SKUs, never a
+`restricted` SKU, no added salt, 1–3 recipes, 3–6 steps). The user message is a JSON context:
+client tier, conditions, allergies, household size, current cart, and live inventory rows with
+`sku, name, category, aisle, shelf, bin, on_hand, status`.
+
+## Required model output
 
 ```json
 {
@@ -62,23 +60,40 @@ Content-Type: application/json
       "clinicalFit": "Low sodium, high protein, renal-safe."
     }
   ],
-  "missingIngredients": [
-    { "sku": "100405", "name": "Quinoa, cooked", "aisle": "D", "shelf": "3", "bin": "B05", "onHand": 24 }
-  ]
+  "missingIngredients": [{ "sku": "100405" }]
 }
 ```
 
-## Validation performed by the web app
+## Validation pipeline (implemented in `aiEngine.js`)
 
-1. HTTP 2xx within `AI_TIMEOUT_MS` (default 6000 ms), else fallback.
-2. `recipes` is an array; each entry has a string `title` and an array `steps`.
-3. `missingIngredients`, if present, is an array; entries are re-checked against live stock before display.
-4. `contractVersion` must equal `1.0` or the response is rejected.
+1. **Transport** — 6 s timeout (`AI_TIMEOUT_MS`), HTTP status checked, non-JSON body rejected.
+2. **Extraction** — fenced code blocks stripped; first `{…}` parsed.
+3. **Structural validation** — `contractVersion === "1.0"`, non-empty recipe array, ≤ `AI_MAX_RECIPES`,
+   string title, non-empty string steps, `uses` is an array of SKU strings.
+4. **Repair turn** — one retry (`AI_REPAIR_ATTEMPTS`) that shows the model its own output plus the
+   exact validation errors.
+5. **Sanitisation (the stock/clinical re-check)** — every SKU in `uses` and `missingIngredients` is
+   looked up in live inventory. Unknown, `on_hand <= 0`, or clinically `restricted` SKUs are dropped;
+   a recipe that references any of them is discarded entirely. Location and stock fields are copied
+   from the database, never trusted from the model.
+6. **Fallback** — unconfigured provider, timeout, 429, repeated invalid output, or all recipes dropped
+   → deterministic local synthesis (`source: "local-deterministic-fallback"`).
+7. **Observability** — every attempt is written to `ai_inference_log` (provider, model, latency, ok,
+   validation errors, dropped recipes) for the evaluation section.
 
-## Roadmap for the engine service
+## Evaluation
 
-- Ollama chat endpoint with `format: "json"` and a JSON schema, plus a repair pass.
-- Retrieval over a small curated nutrition/recipe corpus (no fine-tuning needed).
-- Evaluation fixtures: 20 items → expected status (from the rules engine) + recipe JSON validity +
-  p95 latency. Target: 100% status agreement, ≥95% valid JSON, p95 < 3 s.
-- Document model choice, quantization, hardware, and license in the README.
+```bash
+npm run eval:ai        # writes docs/evaluation/ai-eval-<timestamp>.json + ai-eval-latest.json
+```
+
+Invariants checked per case: contract version, at least one recipe, no restricted/out-of-stock/unknown
+SKU in `uses` or `missingIngredients`, every recipe has steps. Report includes pass rate, p95 latency,
+and source distribution. Run it once with `AI_PROVIDER=none` (offline proof) and once with the live
+provider before presenting.
+
+## Model selection (to record in README)
+
+- **Deployed:** Groq, `llama-3.3-70b-versatile` (open-weight Llama 3.3, 70B).
+- **Local/dev:** Ollama `llama3.1:8b-instruct-q4_K_M` (4-bit quantized, CPU-friendly).
+- Licence: Llama 3.3 Community Licence / Llama 3.1 Community Licence — no paid access required.

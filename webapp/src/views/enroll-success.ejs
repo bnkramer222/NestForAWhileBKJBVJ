@@ -1,0 +1,40 @@
+<%- include('partials/head') %>
+
+<section class="hero">
+  <p class="eyebrow">Enrollment complete</p>
+  <h1>You are in, <%= name %>.</h1>
+  <p class="lead">
+    Keep this token. It is the only thing you need at the kiosk — no ID, no paperwork. It is shown
+    once and is stored only as a one-way hash.
+  </p>
+</section>
+
+<div class="grid grid--two">
+  <section class="card card--elevated">
+    <h2>Your MTG token</h2>
+    <p class="token"><%= token %></p>
+    <p class="muted small">Write it down or screenshot it. We cannot show it again.</p>
+    <a class="btn btn--primary" href="/kiosk">Start shopping</a>
+  </section>
+
+  <section class="card">
+    <h2>Your dietary profile</h2>
+    <p><strong><%= tier.label %></strong></p>
+    <p class="muted small"><%= tier.notes %></p>
+    <ul class="summary-list">
+      <li>Household size: <strong><%= householdSize %></strong></li>
+      <li>Conditions:
+        <strong><%= selectedConditions.length ? selectedConditions.join(', ') : 'none selected' %></strong>
+      </li>
+      <li>Allergies: <strong><%= allergies.length ? allergies.join(', ') : 'none' %></strong></li>
+    </ul>
+    <p class="muted small">
+      Tier assignment is automatic from the clinical matrix. A volunteer can update it if your
+      conditions change.
+    </p>
+  </section>
+</div>
+
+<p class="muted small"><a href="/enroll">Enroll another household</a></p>
+
+<%- include('partials/foot') %>

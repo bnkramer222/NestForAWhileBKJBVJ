@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { db, pool } from '../config/db.js';
 import { encrypt, hashToken } from '../lib/crypto.js';
+import { resolveTier } from '../services/dietaryMatrix.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '../..');
@@ -79,6 +80,9 @@ async function run() {
       clientId = existing.rows[0]?.id;
     }
     if (!clientId) continue;
+
+    const tier = resolveTier(persona.conditions);
+    await pool.query('UPDATE clients SET dietary_tier_id = $2 WHERE id = $1', [clientId, tier.id]);
 
     for (const code of persona.conditions) {
       await pool.query(

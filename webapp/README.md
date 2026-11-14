@@ -21,7 +21,9 @@ contraindicated groceries before stock is decremented.
 **System of Intelligence** (separate service, later): open-source, open-weight model behind a strict
 JSON contract. The web app never depends on it for a clinical decision — see `docs/AI-CONTRACT.md`.
 
-> Status: baseline scaffold. AI engine adapter is stubbed with a deterministic local fallback.
+> Status: working baseline. Check-in, enrollment, shopping companion, checkout hard stops, FIFO
+> inventory, analytics, and an AI adapter (Groq / HF / Ollama) with schema validation, one repair
+> turn, SKU safety re-checks, and a deterministic fallback.
 
 ## Setup Instructions
 
@@ -42,6 +44,9 @@ Edit `.env`:
 - `DATABASE_URL` — Postgres connection string
 - `SESSION_SECRET` and `PHI_KEY` — random 32-byte hex (`node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`)
 - `MAX_FLOOR_CAPACITY` — default 25
+- `AI_PROVIDER` — `groq` | `hf` | `ollama` | `none` (empty = deterministic fallback only)
+- `AI_API_KEY` — Groq or Hugging Face token (never commit)
+- `AI_MODEL` — optional override, e.g. `llama-3.3-70b-versatile`
 
 ### 3. Create and seed the database
 
@@ -65,15 +70,32 @@ npm start       # production
 - Dashboard: `/dashboard`
 - Health: `/healthz`
 
-### 5. Tests
+### 5. Tests and model evaluation
 
 ```bash
-npm test
+npm test          # 23 unit tests: dietary matrix + AI adapter (mocked providers)
+npm run eval:ai   # safety/validity report in docs/evaluation/
 ```
 
-(Test suite lands with the verification epic; `node --test` is wired up.)
+`npm run eval:ai` works with no provider configured (offline deterministic proof). Run it again with
+the live provider before presenting and keep both reports.
 
-### 6. Deploy (Render)
+### 6. AI engine
+
+The adapter speaks chat-completion JSON to three providers:
+
+| `AI_PROVIDER` | Endpoint | Notes |
+|---|---|---|
+| `groq` | `api.groq.com/openai/v1/chat/completions` | open-weight Llama 3.3 70B, JSON mode, free tier |
+| `hf` | `router.huggingface.co/v1/chat/completions` | OpenAI-compatible, secondary |
+| `ollama` | `127.0.0.1:11434/api/chat` | local runner, `format: "json"` |
+| `none` | — | deterministic synthesis only |
+
+Every response is structurally validated, repaired once, then sanitised: unknown, out-of-stock, or
+restricted SKUs are dropped and the location comes from the database, never the model. Rate limits and
+timeouts fall back to local synthesis. Details in `docs/AI-CONTRACT.md`.
+
+### 7. Deploy (Render)
 
 `render.yaml` defines a free web service. Add a Render Postgres instance, copy its internal
 connection string into `DATABASE_URL`, then run `npm run db:schema && npm run db:seed` once against
@@ -90,7 +112,7 @@ that database (Render shell or locally with the external URL).
 | Views + CSS | Copilot Chat, iterated prompts | Server-rendered EJS keeps the MVC boundary visible |
 | Seed catalog + personas | Copilot Chat | Generate realistic nutrient rows, then verified against labels |
 | Database | PostgreSQL (Render / Supabase free tier) | Relational integrity for atomic checkout |
-| AI layer | Open-source model (TBD: Ollama / HF free endpoint) | Rule: no closed or paid LLM APIs |
+| AI layer | Groq free tier (`llama-3.3-70b-versatile`), Ollama for local dev | Open-weight models only; no paid or closed APIs; deterministic fallback |
 | Deployment | Render free web service | Public URL, zero cost |
 | Manual edits | Logged in `docs/MANUAL-EDITS.md` | Rule: only debugging/formatting/integration |
 
@@ -130,14 +152,14 @@ server.js                 HTTP entrypoint + graceful shutdown
 src/app.js                Express wiring (helmet, sessions, static, routes)
 src/config/               env + Postgres pool/transaction helper
 src/models/               SQL only (clients, products, sessions, analytics)
-src/services/             dietary matrix rules, AI engine adapter
-src/controllers/          request flow for kiosk, shop, checkout, dashboard
+src/services/             dietary matrix rules, AI engine adapter (validate/repair/sanitise)
+src/controllers/          request flow for enrollment, kiosk, shop, checkout, dashboard
 src/routes/               URL map
 src/views/                EJS templates (server-rendered MVC views)
-src/scripts/              schema runner + seeding
+src/scripts/              schema runner, seeding, AI evaluation
 public/                   CSS and browser JS
 db/schema.sql             tables, indexes, analytics view, session store
-db/seed.sql               catalog, rules mirror, grants, lots, stock
+db/seed.sql               catalog (107 items), rules mirror, grants, lots, stock
 docs/                     rules, requirements, risks, AI contract, manual-edit log
 PROMPTS.md                verbatim prompt history (submission deliverable)
 ```

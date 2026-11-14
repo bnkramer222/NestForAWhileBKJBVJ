@@ -325,3 +325,38 @@ When I ask for help, please: (a) respect every rule above, (b) point out require
 ```text
 its going to be js based, with a render service, with node/express. as for ai engine thats a later issue, give the starting baseline files please. dont log everything just user prompts
 ```
+
+## 006 — 2026-11-14
+
+```text
+Gaps your list missed
+    •    The AI contract and the code disagree. docs/AI-CONTRACT.md says contractVersion must equal 1.0 and that missingIngredients are re-checked against live stock. aiEngine.js does neither. It only checks that recipes is an array with titles and steps. A model could suggest a recipe item that’s out of stock or restricted, and the app would display it. This is a good fix for the V&V story.
+    •    No engine service exists, and the adapter can’t talk to Groq or Hugging Face as written. callRemote POSTs a custom {contractVersion, task, context} body. Groq, HF, and Ollama all expect chat-completion style requests. You’ll need to rewrite callRemote to use that format with JSON mode, then validate and repair the output.
+    •    The model endpoint is a rule risk. Ollama is the cleanest fit for “open-source and free,” but it can’t run on Render’s free tier or be reached from it. Groq’s free tier serves open-weight Llama and works from a public deploy, but it has rate limits, and the spec says the endpoint must carry no “usage limits.” Document that choice in your assumptions write-up, and keep the deterministic fallback so a rate limit never breaks the demo.
+    •    Check the “started before Saturday” rule. The repo looks like a pre-built scaffold with prompt history and docs. Look at the commit dates. If anything predates Nov 14, be ready to explain it, or restart from a clean repo.
+    •    Manual edits. Core logic must be AI-generated. Keep docs/MANUAL-EDITS.md honest, since misrepresenting AI use is a prohibited action.
+Suggested order, quickest wins first
+    1    Seed catalog to 100+ products (about 57 more rows, with macros, allergens, and bins). I can generate this as SQL now.
+    2    AI adapter, with strict JSON schema, repair pass, stock re-check, and fallback.
+    3    Deploy to Render and seed the hosted database, so you have a public URL early.
+    4    Client enrollment screen (US-2.1), with encrypted PHI and tier assignment.
+    5    Eval script and extra tests, then the README, prompt log, reflection, and assumptions.
+Which model endpoint are you going with, Groq free tier or Hugging Face? Once you pick, I’ll start on the seed SQL and the adapter.
+
+okay can you fix and impliment these things for me
+Gaps your list missed
+    •    The AI contract and the code disagree. docs/AI-CONTRACT.md says contractVersion must equal 1.0 and that missingIngredients are re-checked against live stock. aiEngine.js does neither. It only checks that recipes is an array with titles and steps. A model could suggest a recipe item that’s out of stock or restricted, and the app would display it. This is a good fix for the V&V story.
+    •    No engine service exists, and the adapter can’t talk to Groq or Hugging Face as written. callRemote POSTs a custom {contractVersion, task, context} body. Groq, HF, and Ollama all expect chat-completion style requests. You’ll need to rewrite callRemote to use that format with JSON mode, then validate and repair the output.
+    •    The model endpoint is a rule risk. Ollama is the cleanest fit for “open-source and free,” but it can’t run on Render’s free tier or be reached from it. Groq’s free tier serves open-weight Llama and works from a public deploy, but it has rate limits, and the spec says the endpoint must carry no “usage limits.” Document that choice in your assumptions write-up, and keep the deterministic fallback so a rate limit never breaks the demo.
+    •    Check the “started before Saturday” rule. The repo looks like a pre-built scaffold with prompt history and docs. Look at the commit dates. If anything predates Nov 14, be ready to explain it, or restart from a clean repo.
+    •    Manual edits. Core logic must be AI-generated. Keep docs/MANUAL-EDITS.md honest, since misrepresenting AI use is a prohibited action.
+Suggested order, quickest wins first
+    1    Seed catalog to 100+ products (about 57 more rows, with macros, allergens, and bins). I can generate this as SQL now.
+    2    AI adapter, with strict JSON schema, repair pass, stock re-check, and fallback.
+    3    Deploy to Render and seed the hosted database, so you have a public URL early.
+    4    Client enrollment screen (US-2.1), with encrypted PHI and tier assignment.
+    5    Eval script and extra tests, then the README, prompt log, reflection, and assumptions.
+Which model endpoint are you going with, Groq free tier or Hugging Face? Once you pick, I’ll start on the seed SQL and the adapter.
+
+okay can you fix and impliment these things for me
+```

@@ -44,6 +44,10 @@ CREATE TABLE IF NOT EXISTS dietary_tiers (
   notes        text
 );
 
+-- Bound at enrollment (US-2.1) and refreshed when conditions change.
+ALTER TABLE clients
+  ADD COLUMN IF NOT EXISTS dietary_tier_id text REFERENCES dietary_tiers(id);
+
 -- Reporting mirror of src/services/dietaryMatrix.js (code is authoritative at runtime).
 CREATE TABLE IF NOT EXISTS dietary_rules (
   id          text PRIMARY KEY,
@@ -58,8 +62,7 @@ CREATE TABLE IF NOT EXISTS dietary_rules (
 );
 
 -- ---------------------------------------------------------------- catalog & stock
-CREATE TABLE IF NOT EXISTS products (
-  sku            text PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS products (  sku            text PRIMARY KEY,
   name           text NOT NULL,
   brand          text,
   category       text NOT NULL CHECK (category IN ('produce', 'protein', 'dairy', 'grain', 'pantry')),

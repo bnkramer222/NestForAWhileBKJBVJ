@@ -1,0 +1,110 @@
+{
+  "generatedAt": "2026-11-14T17:38:40.428Z",
+  "contractVersion": "1.0",
+  "provider": {
+    "name": "none",
+    "model": null,
+    "configured": false
+  },
+  "total": 6,
+  "passed": 6,
+  "failed": 0,
+  "passRate": 1,
+  "p95LatencyMs": 0,
+  "sources": {
+    "local-deterministic": 6
+  },
+  "invariants": [
+    "contractVersion === 1.0",
+    "at least one recipe per case",
+    "no recipe uses an unknown, out-of-stock, or clinically restricted SKU",
+    "no missing ingredient references an unknown, out-of-stock, or restricted SKU",
+    "every recipe has at least one step"
+  ],
+  "results": [
+    {
+      "name": "diabetes + hypertension, empty cart",
+      "source": "local-deterministic",
+      "provider": "none",
+      "latencyMs": 0,
+      "attempts": null,
+      "recipeCount": 3,
+      "missingCount": 4,
+      "dropped": [],
+      "errors": [
+        "no provider configured"
+      ],
+      "violations": []
+    },
+    {
+      "name": "CKD stage 3 (potassium and phosphorus limits)",
+      "source": "local-deterministic",
+      "provider": "none",
+      "latencyMs": 0,
+      "attempts": null,
+      "recipeCount": 3,
+      "missingCount": 4,
+      "dropped": [],
+      "errors": [
+        "no provider configured"
+      ],
+      "violations": []
+    },
+    {
+      "name": "triple chronicity + dairy allergy",
+      "source": "local-deterministic",
+      "provider": "none",
+      "latencyMs": 0,
+      "attempts": null,
+      "recipeCount": 3,
+      "missingCount": 4,
+      "dropped": [],
+      "errors": [
+        "no provider configured"
+      ],
+      "violations": []
+    },
+    {
+      "name": "heart failure, strict sodium",
+      "source": "local-deterministic",
+      "provider": "none",
+      "latencyMs": 0,
+      "attempts": null,
+      "recipeCount": 3,
+      "missingCount": 4,
+      "dropped": [],
+      "errors": [
+        "no provider configured"
+      ],
+      "violations": []
+    },
+    {
+      "name": "gluten allergy + hypertension",
+      "source": "local-deterministic",
+      "provider": "none",
+      "latencyMs": 0,
+      "attempts": null,
+      "recipeCount": 3,
+      "missingCount": 4,
+      "dropped": [],
+      "errors": [
+        "no provider configured"
+      ],
+      "violations": []
+    },
+    {
+      "name": "standard tier, no conditions",
+      "source": "local-deterministic",
+      "provider": "none",
+      "latencyMs": 0,
+      "attempts": null,
+      "recipeCount": 3,
+      "missingCount": 4,
+      "dropped": [],
+      "errors": [
+        "no provider configured"
+      ],
+      "violations": []
+    }
+  ]
+}

@@ -18,6 +18,13 @@ services:
         generateValue: true
       - key: MAX_FLOOR_CAPACITY
         value: 25
+      # AI engine: Groq free tier (open-weight Llama). Set AI_API_KEY in the dashboard.
+      - key: AI_PROVIDER
+        value: groq
+      - key: AI_MODEL
+        value: llama-3.3-70b-versatile
+      - key: AI_API_KEY
+        sync: false
       # Set manually in the Render dashboard (from the Render Postgres instance)
       - key: DATABASE_URL
         sync: false

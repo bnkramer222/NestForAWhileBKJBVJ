@@ -3,10 +3,10 @@
 <section class="session-header">
   <div>
     <p class="eyebrow">Shopping session</p>
-    <h1><%= shopper.name %></h1>
+    <h1><%= client.name %></h1>
     <p class="muted">
-      Household of <%= shopper.householdSize %> · <%= tier.label %>
-      <% if (shopper.conditions.length) { %> · ICD-10: <%= shopper.conditions.join(', ') %><% } %>
+      Household of <%= client.householdSize %> · <%= tier.label %>
+      <% if (client.conditions.length) { %> · ICD-10: <%= client.conditions.join(', ') %><% } %>
     </p>
   </div>
   <div class="tier-note"><%= tier.notes %></div>

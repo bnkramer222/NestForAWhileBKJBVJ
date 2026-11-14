@@ -1,0 +1,61 @@
+<%- include('partials/head') %>
+
+<section class="hero">
+  <p class="eyebrow">MTG enrollment</p>
+  <h1>Join Medically Tailored Groceries.</h1>
+  <p class="lead">
+    No ID and no paperwork at the door. Tell us your household and health conditions once, and the
+    market will keep your basket clinically safe on every visit.
+  </p>
+</section>
+
+<% if (error) { %>
+  <div class="banner banner--error" role="alert"><%= error %></div>
+<% } %>
+
+<form method="post" action="/enroll" class="card stack">
+  <div class="grid grid--two">
+    <div class="stack">
+      <label for="name">Name</label>
+      <input id="name" name="name" type="text" value="<%= values.name %>" maxlength="80" required>
+      <p class="muted small">Stored encrypted (AES-256-GCM). Shown only to you and the volunteer at checkout.</p>
+    </div>
+    <div class="stack">
+      <label for="household_size">Household size</label>
+      <select id="household_size" name="household_size" required>
+        <% for (let size = 1; size <= 12; size += 1) { %>
+          <option value="<%= size %>" <%= values.householdSize === size ? 'selected' : '' %>><%= size %></option>
+        <% } %>
+      </select>
+      <p class="muted small">Drives the pounds-per-visit target for your dietary tier.</p>
+    </div>
+  </div>
+
+  <fieldset class="stack">
+    <legend>Chronic conditions (ICD-10)</legend>
+    <p class="muted small">Select every condition that applies. Multiple conditions are handled together.</p>
+    <div class="checkbox-grid">
+      <% conditions.forEach(function (condition) { %>
+        <label class="checkbox">
+          <input type="checkbox" name="conditions" value="<%= condition.code %>"
+                 <%= values.conditions.includes(condition.code) ? 'checked' : '' %>>
+          <span><strong><%= condition.code %></strong> — <%= condition.name %></span>
+        </label>
+      <% }) %>
+    </div>
+  </fieldset>
+
+  <div class="stack">
+    <label for="allergies">Food allergies (optional, comma separated)</label>
+    <input id="allergies" name="allergies" type="text" value="<%= values.allergies %>" placeholder="dairy, peanuts">
+    <p class="muted small">Allergens matching an item force it to red for your profile.</p>
+  </div>
+
+  <div class="banner">
+    Your conditions are encrypted at rest, never printed on a receipt, and stripped from analytics.
+  </div>
+
+  <button type="submit" class="btn btn--primary btn--lg">Create MTG profile</button>
+</form>
+
+<%- include('partials/foot') %>

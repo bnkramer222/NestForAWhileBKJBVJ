@@ -38,7 +38,7 @@ export const showShop = ah(async (req, res) => {
   res.render('shop', {
     title: 'Shop',
     bodyClass: 'shop',
-    shopper: ctx.client,
+    client: ctx.client,
     tier: recommendations.tier,
     needs: recommendations.needs,
     recommendations: recommendations.items,

@@ -12,6 +12,7 @@
     "start": "node server.js",
     "db:schema": "node src/scripts/run-sql.js db/schema.sql",
     "db:seed": "node src/scripts/seed.js",
+    "eval:ai": "node src/scripts/eval-ai.js",
     "test": "node --test"
   },
   "dependencies": {

@@ -116,7 +116,13 @@ input[type="text"] {
   width: 100%; padding: 0.85rem 0.95rem; border: 1.5px solid var(--sand-200); border-radius: 10px;
   font: inherit; background: var(--sand-50);
 }
-input[type="text"]:focus-visible { outline: 3px solid var(--green-500); outline-offset: 1px; border-color: var(--green-500); }
+select {
+  width: 100%; padding: 0.85rem 0.95rem; border: 1.5px solid var(--sand-200); border-radius: 10px;
+  font: inherit; background: var(--sand-50);
+}
+input[type="text"]:focus-visible,
+select:focus-visible,
+input[type="checkbox"]:focus-visible { outline: 3px solid var(--green-500); outline-offset: 1px; }
 .input-row { display: flex; gap: 0.6rem; flex-wrap: wrap; }
 .input-row input { flex: 1 1 12rem; }
 
@@ -233,6 +239,25 @@ input[type="text"]:focus-visible { outline: 3px solid var(--green-500); outline-
 }
 
 .end-session { margin: 1rem 0 2rem; }
+
+/* ---------- enrollment ---------- */
+fieldset { border: 1px solid var(--sand-200); border-radius: 12px; padding: 1rem; margin: 0; }
+legend { font-weight: 700; padding: 0 0.4rem; }
+.checkbox-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0.5rem; }
+.checkbox {
+  display: flex; gap: 0.55rem; align-items: flex-start; font-weight: 400; font-size: 0.9rem;
+  background: var(--sand-50); border: 1px solid var(--sand-200); border-radius: 10px; padding: 0.6rem 0.7rem;
+  cursor: pointer;
+}
+.checkbox input { margin-top: 0.2rem; accent-color: var(--green-700); }
+.token {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: clamp(1.6rem, 5vw, 2.4rem);
+  font-weight: 700; letter-spacing: 0.06em; background: var(--green-100); color: var(--green-900);
+  padding: 0.6rem 0.9rem; border-radius: 10px; text-align: center;
+}
+.summary-list { margin: 0 0 1rem; padding-left: 1.1rem; font-size: 0.92rem; }
+.summary-list li { margin-bottom: 0.3rem; }
 
 /* ---------- footer ---------- */
 .foot {

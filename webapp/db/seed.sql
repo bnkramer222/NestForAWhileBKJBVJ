@@ -57,7 +57,7 @@ INSERT INTO grants (id, funder, grant_code, period_start, period_end) VALUES
   ('G-EPIC-2026',  'Epic Cure General Fund',          'EC-GEN-2026',  '2026-01-01', '2026-12-31')
 ON CONFLICT (id) DO NOTHING;
 
--- ---------------------------------------------------------------- product catalog (demo subset; target ≥100)
+-- ---------------------------------------------------------------- product catalog (107 items)
 INSERT INTO products
   (sku, name, brand, category, aisle, shelf, bin, serving_size_g, calories, protein_g, carbs_g, fiber_g, sugar_g, fat_g, sat_fat_g, sodium_mg, potassium_mg, phosphorus_mg, glycemic_index, allergens, tags)
 VALUES
@@ -97,7 +97,91 @@ VALUES
   ('100503','Creamy peanut butter', 'Pantry Co',    'pantry','E','2','B03',32,190,8,7,2,3,16,3,140,200,150,14,'{peanuts}','{added_sugar}'),
   ('100504','Corn flakes cereal',   'Sunrise',      'pantry','E','2','B04',40,150,2,36,1,12,0.2,0,200,60,30,80,'{gluten}','{added_sugar,high_glycemic}'),
   ('100505','Canned corn',          'Pantry Co',    'pantry','E','3','B05',125,90,3,20,2,5,1,0.2,300,220,70,55,'{}','{}'),
-  ('100506','Low-sodium vegetable broth','Pantry Co','pantry','E','3','B06',240,15,0,2,0,1,0.5,0.1,140,30,10,0,'{}','{}')
+  ('100506','Low-sodium vegetable broth','Pantry Co','pantry','E','3','B06',240,15,0,2,0,1,0.5,0.1,140,30,10,0,'{}','{}'),
+
+  -- produce aisle A (continued)
+  ('100111','Bell peppers',          'Local',       'produce','A','6','B11',119,31,1,6,2.1,4.2,0.3,0,4,251,26,15,'{}','{}'),
+  ('100112','Cucumbers',             'Local',       'produce','A','6','B12',104,16,0.7,3.8,0.5,1.7,0.1,0,2,147,24,15,'{}','{}'),
+  ('100113','Green beans',           'Fresh Farms', 'produce','A','7','B13',100,31,1.8,7,2.7,3.3,0.2,0,45,209,38,15,'{}','{}'),
+  ('100114','Green cabbage',         'Local',       'produce','A','7','B14',89,22,1.1,5.2,2.2,2.8,0.1,0,16,170,26,15,'{}','{}'),
+  ('100115','Cauliflower',           'Fresh Farms', 'produce','A','8','B15',107,25,1.9,5,2,1.9,0.3,0,30,299,44,15,'{}','{}'),
+  ('100116','Romaine lettuce',       'Fresh Farms', 'produce','A','8','B16',47,8,0.6,1.5,1,0.6,0.1,0,4,116,14,15,'{}','{}'),
+  ('100117','Blueberries',           'Rescue Lot',  'produce','A','9','B17',148,84,1.1,21,3.6,14.7,0.5,0,1,114,18,53,'{}','{}'),
+  ('100118','Strawberries',          'Rescue Lot',  'produce','A','9','B18',152,49,1,11.7,3,7.4,0.5,0,2,233,36,40,'{}','{}'),
+  ('100119','Avocados',              'Rescue Lot',  'produce','A','10','B19',150,240,3,12.8,10,1.3,22,3.1,10,727,78,15,'{}','{}'),
+  ('100120','Sweet corn',            'Local',       'produce','A','10','B20',90,90,3.3,19,2.4,6.2,1.5,0.2,15,270,89,55,'{}','{}'),
+  ('100121','Butternut squash',      'Local',       'produce','A','11','B21',140,63,1.4,16,2.8,3,0.1,0,6,493,33,51,'{}','{}'),
+  ('100122','White mushrooms',       'Fresh Farms', 'produce','A','11','B22',70,22,2.2,4.6,1.4,1.2,0.2,0,2,223,61,15,'{}','{}'),
+  ('100123','Beets',                 'Local',       'produce','A','12','B23',136,58,2.2,13,3.8,9.2,0.2,0,106,442,22,64,'{}','{}'),
+  ('100124','Asparagus',             'Fresh Farms', 'produce','A','12','B24',134,27,3,5.2,2.8,2.5,0.2,0,3,271,70,15,'{}','{}'),
+  ('100125','Red potatoes',          'Local',       'produce','A','13','B25',148,116,3,26,2.1,1.9,0.1,0,8,512,68,78,'{}','{high_glycemic}'),
+  ('100126','Frozen mixed berries',  'Rescue Lot',  'produce','A','13','B26',140,70,1,17,4,10,0.4,0,2,130,20,40,'{}','{}'),
+
+  -- protein aisle B (continued)
+  ('100209','Pork loin',             'Rescue Lot',  'protein','B','5','B09',100,143,26,0,0,0,3.5,1.2,59,370,210,0,'{}','{}'),
+  ('100210','Deli turkey breast',    'Rescue Lot',  'protein','B','5','B10',56,60,12,1,0,1,1.5,0.5,480,200,120,0,'{}','{high_sodium}'),
+  ('100211','Ground beef 90/10',     'Rescue Lot',  'protein','B','6','B11',100,176,20,0,0,0,10,4,66,270,180,0,'{}','{}'),
+  ('100212','Beef sirloin',          'Rescue Lot',  'protein','B','6','B12',100,180,27,0,0,0,7,2.5,55,330,210,0,'{}','{}'),
+  ('100213','Canned salmon',         'Ocean Catch', 'protein','B','7','B13',85,120,17,0,0,0,5,1,380,300,240,0,'{fish}','{high_sodium}'),
+  ('100214','Shrimp',                'Ocean Catch', 'protein','B','7','B14',100,99,24,0.2,0,0,0.3,0.1,111,259,201,0,'{shellfish}','{}'),
+  ('100215','Cod fillet',            'Ocean Catch', 'protein','B','8','B15',100,82,18,0,0,0,0.7,0.1,54,413,203,0,'{fish}','{}'),
+  ('100216','Sardines in water',     'Ocean Catch', 'protein','B','8','B16',85,130,15,0,0,0,7,1.5,280,300,350,0,'{fish}','{high_phosphorus}'),
+  ('100217','Chicken thighs',        'Rescue Lot',  'protein','B','9','B17',100,209,26,0,0,0,11,3,88,220,180,0,'{}','{}'),
+  ('100218','Turkey sausage',        'Rescue Lot',  'protein','B','9','B18',68,130,9,2,0,1,9,2.5,480,230,150,0,'{}','{high_sodium}'),
+  ('100219','Tempeh',                'Green Block', 'protein','B','10','B19',84,160,15,8,5,3,9,1.5,10,350,180,0,'{soy}','{}'),
+  ('100220','Edamame',               'Green Block', 'protein','B','10','B20',155,188,18,14,8,3,8,1,9,676,260,0,'{soy}','{}'),
+  ('100221','Canned chickpeas',      'Pantry Co',   'protein','B','11','B21',130,140,7,22,6,4,2.5,0.2,280,300,150,0,'{}','{}'),
+  ('100222','Canned kidney beans',   'Pantry Co',   'protein','B','11','B22',130,120,8,21,7,1,0.5,0.1,300,400,160,0,'{}','{}'),
+  ('100223','Canned chicken',        'Pantry Co',   'protein','B','12','B23',56,70,13,0,0,0,1.5,0.4,400,150,100,0,'{}','{high_sodium}'),
+  ('100224','Frozen white fish',     'Ocean Catch', 'protein','B','12','B24',100,90,18,0,0,0,1,0.2,60,300,200,0,'{fish}','{}'),
+  ('100225','Ground chicken',        'Rescue Lot',  'protein','B','13','B25',100,189,20,0,0,0,11,3,70,280,190,0,'{}','{}'),
+  ('100226','Liquid egg whites',     'Sunrise',     'protein','B','13','B26',46,25,5,0.7,0,0.4,0,0,55,80,20,0,'{eggs}','{}'),
+
+  -- dairy aisle C (continued)
+  ('100305','Skim milk',             'Valley Dairy','dairy','C','3','B05',240,83,8,12,0,12,0.2,0.1,103,382,247,0,'{dairy}','{}'),
+  ('100306','Unsweetened almond milk','Green Block', 'dairy','C','3','B06',240,30,1,1,0,0,2.5,0.2,170,180,20,0,'{tree_nuts}','{}'),
+  ('100307','Swiss cheese',          'Valley Dairy','dairy','C','4','B07',28,111,8,0.4,0,0.1,8.8,5.5,54,32,160,0,'{dairy}','{}'),
+  ('100308','Part-skim mozzarella',  'Valley Dairy','dairy','C','4','B08',28,85,6,1,0,0.3,6.3,3.7,175,27,160,0,'{dairy}','{}'),
+  ('100309','Feta cheese',           'Valley Dairy','dairy','C','5','B09',28,75,4,1.2,0,1,6,4.2,320,18,96,0,'{dairy}','{high_sodium}'),
+  ('100310','Plain kefir',           'Valley Dairy','dairy','C','5','B10',240,110,9,12,0,12,2.5,1.5,105,380,230,0,'{dairy}','{}'),
+  ('100311','String cheese',         'Valley Dairy','dairy','C','6','B11',28,80,6,1,0,0,6,3.7,200,24,150,0,'{dairy}','{}'),
+  ('100312','Butter',                'Valley Dairy','dairy','C','6','B12',14,102,0.1,0,0,0,11.5,7.3,2,3,3,0,'{dairy}','{}'),
+  ('100313','Sour cream',            'Valley Dairy','dairy','C','7','B13',30,60,1,1.2,0,1,5.6,3.5,15,40,30,0,'{dairy}','{}'),
+  ('100314','Plain whole-milk yogurt','Valley Dairy','dairy','C','7','B14',245,149,8.5,11.4,0,11.4,8,5.2,113,380,240,0,'{dairy}','{}'),
+
+  -- grain aisle D (continued)
+  ('100406','White rice, cooked',    'Pantry Co',   'grain','D','4','B06',186,205,4.3,45,0.6,0.1,0.4,0.1,2,55,68,72,'{}','{high_glycemic}'),
+  ('100407','Corn tortillas',        'Baker Rescue','grain','D','4','B07',26,52,1.4,10.7,1.5,0.3,0.7,0.1,11,40,50,52,'{}','{}'),
+  ('100408','Flour tortillas',       'Baker Rescue','grain','D','5','B08',35,140,4,24,1,1,4,1,350,60,70,60,'{wheat,gluten}','{high_glycemic}'),
+  ('100409','White sandwich bread',  'Baker Rescue','grain','D','5','B09',28,75,2.6,14,0.8,1.4,1,0.2,140,40,30,75,'{wheat,gluten}','{high_glycemic}'),
+  ('100410','Pearl barley, cooked',  'Pantry Co',   'grain','D','6','B10',157,193,3.5,44,6,0.4,0.7,0.1,5,146,85,25,'{gluten}','{}'),
+  ('100411','Bulgur, cooked',        'Pantry Co',   'grain','D','6','B11',182,151,5.6,34,8.2,0.2,0.4,0.1,9,124,73,48,'{gluten}','{}'),
+  ('100412','Buckwheat, cooked',     'Pantry Co',   'grain','D','7','B12',168,155,5.7,33,4.5,1.5,1,0.2,7,148,70,45,'{}','{}'),
+  ('100413','Whole grain crackers',  'Pantry Co',   'grain','D','7','B13',16,70,2,10,2,1,2.5,0.4,150,50,40,60,'{wheat,gluten}','{}'),
+  ('100414','Instant oats, plain',   'Pantry Co',   'grain','D','8','B14',28,100,4,19,3,0,2,0.4,75,130,100,55,'{gluten}','{}'),
+  ('100415','Whole wheat English muffin','Baker Rescue','grain','D','8','B15',57,134,5,27,3,2,1,0.2,260,100,80,55,'{wheat,gluten}','{}'),
+  ('100416','Brown rice pasta',      'Pantry Co',   'grain','D','9','B16',56,190,4,40,4,1,1.5,0.3,5,180,120,45,'{}','{}'),
+  ('100417','Granola',               'Sunrise',     'grain','D','9','B17',50,220,5,32,4,8,8,1.5,60,180,120,60,'{gluten}','{added_sugar}'),
+
+  -- pantry aisle E (continued)
+  ('100507','Diced tomatoes, no salt','Pantry Co',  'pantry','E','4','B07',121,30,1.4,7,1.5,4,0.2,0,20,300,30,15,'{}','{}'),
+  ('100508','Canned green beans',    'Pantry Co',   'pantry','E','4','B08',125,25,1.2,5,1.8,1.5,0.1,0,300,130,30,15,'{}','{high_sodium}'),
+  ('100509','Canned peaches in juice','Pantry Co',  'pantry','E','5','B09',120,60,0.6,15,1.5,13,0.1,0,10,120,10,55,'{}','{added_sugar}'),
+  ('100510','Applesauce, unsweetened','Pantry Co',  'pantry','E','5','B10',113,50,0.2,13,1.6,11,0,0,5,90,8,40,'{}','{}'),
+  ('100511','Canned pineapple in juice','Pantry Co','pantry','E','6','B11',120,60,0.5,15,1.4,13,0.1,0,10,120,10,55,'{}','{added_sugar}'),
+  ('100512','Pasta sauce, no salt',  'Pantry Co',   'pantry','E','6','B12',125,50,2,8,2,5,1.5,0.2,30,300,40,45,'{}','{}'),
+  ('100513','Salsa',                 'Pantry Co',   'pantry','E','7','B13',32,10,0.5,2,0.5,1.5,0,0,250,100,20,15,'{}','{high_sodium}'),
+  ('100514','Vegetable oil',         'Pantry Co',   'pantry','E','7','B14',14,120,0,0,0,0,14,2,0,0,0,0,'{}','{}'),
+  ('100515','Olive oil',             'Pantry Co',   'pantry','E','8','B15',14,119,0,0,0,0,13.5,1.9,0,0,0,0,'{}','{}'),
+  ('100516','Honey',                 'Pantry Co',   'pantry','E','8','B16',21,64,0,17,0,17,0,0,1,11,1,58,'{}','{added_sugar,high_glycemic}'),
+  ('100517','White sugar',           'Pantry Co',   'pantry','E','9','B17',4,16,0,4,0,4,0,0,0,0,0,65,'{}','{added_sugar,high_glycemic}'),
+  ('100518','Dry lentils',           'Pantry Co',   'pantry','E','9','B18',100,352,25,63,11,2,1,0.2,6,955,451,30,'{}','{high_phosphorus}'),
+  ('100519','Dry black beans',       'Pantry Co',   'pantry','E','10','B19',100,341,22,62,15,2,1.4,0.4,5,1483,352,30,'{}','{high_phosphorus}'),
+  ('100520','Peanut butter, no sugar','Pantry Co',  'pantry','E','10','B20',32,188,8,6,2,1,16,3,140,200,150,14,'{peanuts}','{}'),
+  ('100521','Almonds',               'Pantry Co',   'pantry','E','11','B21',28,164,6,6,3.5,1.2,14,1.1,0,208,137,15,'{tree_nuts}','{}'),
+  ('100522','Walnuts',               'Pantry Co',   'pantry','E','11','B22',28,185,4.3,3.9,1.9,0.7,18.5,1.7,0.6,125,98,15,'{tree_nuts}','{}'),
+  ('100523','Canned pumpkin',        'Pantry Co',   'pantry','E','12','B23',122,42,1.4,10,3.6,4,0.4,0.1,5,340,40,65,'{}','{}'),
+  ('100524','Tomato paste',          'Pantry Co',   'pantry','E','12','B24',33,27,1.4,6,1.3,4,0.2,0,20,340,40,45,'{}','{}')
 ON CONFLICT (sku) DO NOTHING;
 
 -- ---------------------------------------------------------------- shelf stock

@@ -25,10 +25,12 @@ Deadline: **Sun Nov 15, 2026, 9:00 AM** — upload a compressed archive to https
 - [ ] Reflection on what worked, what failed, how the team adapted
 
 ## 4. Supporting files
-- [ ] Unit tests / test cases / validation scripts
+- [ ] Unit tests / test cases / validation scripts (`npm test` — 23 tests)
+- [ ] Model evaluation report (`npm run eval:ai` → `docs/evaluation/ai-eval-latest.json`)
 - [ ] Sample inputs and outputs (JSON manifests, recommendation responses)
 - [ ] Execution evidence: screenshots or logs of successful runs
-- [ ] Edge-case evidence: expired enrollment, floor at capacity, restricted item hard-stop, model timeout, malformed model JSON
+- [ ] Enrollment evidence (US-2.1): profile creation, encrypted PHI, tier assignment
+- [ ] Edge-case evidence: expired enrollment, floor at capacity, restricted item hard-stop, model timeout, malformed model JSON, rate limit (429)
 - [ ] Evaluation notes: accuracy, latency, usability; model eval fixture results
 - [ ] Diagrams: architecture, ERD, warehouse grid, user flow
 

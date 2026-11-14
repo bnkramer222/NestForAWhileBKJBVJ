@@ -19,6 +19,7 @@ import {
 } from '../controllers/checkout.controller.js';
 import { showDashboard } from '../controllers/dashboard.controller.js';
 import { health } from '../controllers/health.controller.js';
+import { showEnroll, submitEnroll } from '../controllers/enrollment.controller.js';
 
 const router = Router();
 
@@ -29,6 +30,10 @@ router.get('/healthz', health);
 router.get('/kiosk', showKiosk);
 router.post('/kiosk/check-in', checkIn);
 router.get('/queue', showQueueStatus);
+
+// Epic 2 — client profile creation (US-2.1)
+router.get('/enroll', showEnroll);
+router.post('/enroll', submitEnroll);
 
 // Epic 3 — client shopping companion
 router.get('/shop', showShop);
