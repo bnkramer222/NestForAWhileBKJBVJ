@@ -1,0 +1,97 @@
+<%- include('partials/head') %>
+
+<section class="session-header">
+  <div>
+    <p class="eyebrow">Shopping session</p>
+    <h1><%= shopper.name %></h1>
+    <p class="muted">
+      Household of <%= shopper.householdSize %> · <%= tier.label %>
+      <% if (shopper.conditions.length) { %> · ICD-10: <%= shopper.conditions.join(', ') %><% } %>
+    </p>
+  </div>
+  <div class="tier-note"><%= tier.notes %></div>
+</section>
+
+<div id="shop-app" data-token="<%= sessionToken %>">
+  <div class="grid grid--two">
+    <section class="card">
+      <h2>Scan an item</h2>
+      <p class="muted small">Use a barcode or type the SKU from the shelf label.</p>
+      <form id="scan-form" class="stack">
+        <label for="sku">SKU / barcode</label>
+        <div class="input-row">
+          <input id="sku" name="sku" type="text" inputmode="numeric" placeholder="e.g. 100101" required>
+          <button type="submit" class="btn btn--primary">Check</button>
+        </div>
+      </form>
+      <button type="button" id="camera-btn" class="btn btn--ghost btn--block">Use camera</button>
+      <video id="camera-preview" class="camera" playsinline muted hidden></video>
+      <p id="scan-hint" class="muted small">Green = approved · Yellow = limited · Red = restricted.</p>
+      <div id="scan-result" class="result" hidden></div>
+    </section>
+
+    <section class="card">
+      <h2>Your cart</h2>
+      <ul id="cart-list" class="cart-list">
+        <% if (!cart.length) { %>
+          <li class="muted">Nothing scanned yet.</li>
+        <% } %>
+        <% cart.forEach(function (item) { %>
+          <li data-sku="<%= item.sku %>">
+            <span class="badge badge--<%= item.evaluated_status %>"><%= item.evaluated_status %></span>
+            <span class="cart-name"><%= item.name %></span>
+            <span class="muted">×<%= item.quantity %></span>
+            <button type="button" class="link-btn js-remove" data-sku="<%= item.sku %>">remove</button>
+          </li>
+        <% }) %>
+      </ul>
+      <button type="button" id="recipes-btn" class="btn btn--ghost btn--block">Suggest recipes from my cart</button>
+    </section>
+  </div>
+
+  <section class="card" id="recipes-panel" hidden>
+    <div class="card-head">
+      <h2>Recipes for your cart</h2>
+      <span id="recipes-source" class="pill"></span>
+    </div>
+    <div id="recipes-list" class="recipe-grid"></div>
+    <h3>Missing something?</h3>
+    <ul id="missing-list" class="missing-list"></ul>
+  </section>
+
+  <section class="card">
+    <h2>Recommended from today's floor</h2>
+    <p class="muted small">Matched to your clinical tier and current stock. Targets are per household visit.</p>
+    <ul class="targets">
+      <% Object.keys(needs).forEach(function (category) { %>
+        <li><span><%= category %></span> <strong><%= needs[category] %> lb</strong></li>
+      <% }) %>
+    </ul>
+    <div class="rec-grid">
+      <% recommendations.forEach(function (item) { %>
+        <article class="rec">
+          <div class="rec-head">
+            <span class="badge badge--<%= item.status %>"><%= item.status %></span>
+            <span class="pill"><%= item.category %></span>
+          </div>
+          <h3><%= item.name %></h3>
+          <p class="muted small">Aisle <%= item.aisle %> · Shelf <%= item.shelf %> · Bin <%= item.bin %></p>
+          <p class="muted small"><%= item.onHand %> on hand</p>
+          <% if (item.reasons.length) { %>
+            <p class="small reason"><%= item.reasons[0] %></p>
+          <% } %>
+          <button type="button" class="btn btn--ghost btn--sm js-add" data-sku="<%= item.sku %>">Add to cart</button>
+        </article>
+      <% }) %>
+      <% if (!recommendations.length) { %>
+        <p class="muted">No eligible stock matched this profile. A volunteer can help with substitutions.</p>
+      <% } %>
+    </div>
+  </section>
+
+  <form method="post" action="/shop/exit" class="end-session">
+    <button type="submit" class="btn btn--ghost">End session without checking out</button>
+  </form>
+</div>
+
+<%- include('partials/foot') %>

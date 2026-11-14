@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %> · Epic Cure MTG</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <meta name="theme-color" content="#14532d">
+</head>
+<body class="<%= typeof bodyClass !== 'undefined' ? bodyClass : '' %>">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="topbar">
+    <a class="brand" href="/kiosk">
+      <span class="brand-mark" aria-hidden="true">EC</span>
+      <span class="brand-text">Epic Cure <small>Medically Tailored Groceries</small></span>
+    </a>
+    <nav class="nav" aria-label="Primary">
+      <a href="/kiosk" class="<%= currentPath === '/kiosk' ? 'is-active' : '' %>">Kiosk</a>
+      <a href="/shop" class="<%= currentPath === '/shop' ? 'is-active' : '' %>">Shop</a>
+      <a href="/checkout" class="<%= currentPath === '/checkout' ? 'is-active' : '' %>">Checkout</a>
+      <a href="/dashboard" class="<%= currentPath === '/dashboard' ? 'is-active' : '' %>">Dashboard</a>
+    </nav>
+  </header>
+
+  <% if (typeof dbEnabled !== 'undefined' && !dbEnabled) { %>
+    <div class="banner banner--warn" role="status">
+      Database not configured. Set <code>DATABASE_URL</code> and run <code>npm run db:schema &amp;&amp; npm run db:seed</code>.
+    </div>
+  <% } %>
+
+  <main id="main" class="wrap">

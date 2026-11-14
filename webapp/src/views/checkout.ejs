@@ -1,0 +1,68 @@
+<%- include('partials/head') %>
+
+<section class="hero">
+  <p class="eyebrow">Volunteer exit terminal</p>
+  <h1>Checkout guardrails</h1>
+  <p class="lead">Every cart is verified against the client's clinical profile before stock is decremented.</p>
+</section>
+
+<section class="card">
+  <form method="get" action="/checkout" class="input-row">
+    <label class="sr-only" for="token">Session token</label>
+    <input id="token" name="token" type="text" placeholder="ses_… (scan the client's exit QR)" value="<%= token %>">
+    <button type="submit" class="btn btn--primary">Load session</button>
+  </form>
+  <% if (error) { %>
+    <div class="banner banner--error" role="alert"><%= error %></div>
+  <% } %>
+</section>
+
+<% if (token && clientName) { %>
+  <div id="checkout-app" data-token="<%= token %>" data-status="<%= sessionStatus %>">
+    <div id="hard-stop" class="hard-stop" hidden>
+      <h2>Clinical hard stop</h2>
+      <p id="hard-stop-message">A restricted item is in this cart. Remove it with the client before completing checkout.</p>
+      <ul id="hard-stop-items"></ul>
+    </div>
+
+    <div class="grid grid--two">
+      <section class="card">
+        <h2><%= clientName %></h2>
+        <p class="muted small">Session status: <strong><%= sessionStatus %></strong></p>
+        <% if (sessionStatus === 'active') { %>
+          <form id="checkout-scan" class="stack">
+            <label for="checkout-sku">Scan item</label>
+            <div class="input-row">
+              <input id="checkout-sku" name="sku" type="text" inputmode="numeric" placeholder="SKU / barcode" required>
+              <button type="submit" class="btn btn--primary">Add</button>
+            </div>
+          </form>
+          <p id="checkout-hint" class="muted small">Scanned items join the cart and are re-evaluated on checkout.</p>
+        <% } else { %>
+          <div class="banner">This session is <%= sessionStatus %>. Nothing further to scan.</div>
+        <% } %>
+      </section>
+
+      <section class="card">
+        <h2>Cart manifest</h2>
+        <ul id="checkout-cart" class="cart-list">
+          <% cart.forEach(function (item) { %>
+            <li data-sku="<%= item.sku %>">
+              <span class="badge badge--<%= item.evaluated_status %>"><%= item.evaluated_status %></span>
+              <span class="cart-name"><%= item.name %></span>
+              <span class="muted">×<%= item.quantity %></span>
+              <button type="button" class="link-btn js-remove-checkout" data-sku="<%= item.sku %>">remove</button>
+            </li>
+          <% }) %>
+          <% if (!cart.length) { %><li class="muted">Cart is empty.</li><% } %>
+        </ul>
+        <% if (sessionStatus === 'active') { %>
+          <button type="button" id="complete-btn" class="btn btn--primary btn--block">Complete checkout</button>
+        <% } %>
+        <div id="receipt" class="receipt" hidden></div>
+      </section>
+    </div>
+  </div>
+<% } %>
+
+<%- include('partials/foot') %>

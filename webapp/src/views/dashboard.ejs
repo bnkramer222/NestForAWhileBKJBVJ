@@ -1,0 +1,87 @@
+<%- include('partials/head') %>
+
+<section class="hero">
+  <p class="eyebrow">Program evaluation</p>
+  <h1>Analytics &amp; operations</h1>
+  <p class="lead">De-identified aggregates only — no names, tokens, or client identifiers leave this view.</p>
+</section>
+
+<section class="stats">
+  <article class="stat"><span class="stat-value"><%= summary.clients %></span><span class="stat-label">clients enrolled</span></article>
+  <article class="stat"><span class="stat-value"><%= summary.active_sessions %></span><span class="stat-label">on the floor</span></article>
+  <article class="stat"><span class="stat-value"><%= summary.queued %></span><span class="stat-label">in the queue</span></article>
+  <article class="stat"><span class="stat-value"><%= Number(summary.pounds_distributed).toFixed(1) %></span><span class="stat-label">lb distributed</span></article>
+  <article class="stat"><span class="stat-value"><%= summary.restricted_in_carts %></span><span class="stat-label">restricted units caught</span></article>
+  <article class="stat"><span class="stat-value"><%= summary.expiring_lots %></span><span class="stat-label">lots expiring ≤ 7d</span></article>
+</section>
+
+<div class="grid grid--two">
+  <section class="card">
+    <h2>Distribution by category</h2>
+    <table class="table">
+      <thead><tr><th>Month</th><th>Category</th><th>Status</th><th>Units</th><th>Weight (lb)</th></tr></thead>
+      <tbody>
+        <% distribution.forEach(function (row) { %>
+          <tr>
+            <td><%= new Date(row.month).toISOString().slice(0, 7) %></td>
+            <td><%= row.category %></td>
+            <td><span class="badge badge--<%= row.evaluated_status %>"><%= row.evaluated_status %></span></td>
+            <td><%= row.units %></td>
+            <td><%= Number(row.weight_lbs).toFixed(1) %></td>
+          </tr>
+        <% }) %>
+        <% if (!distribution.length) { %><tr><td colspan="5" class="muted">No checkouts yet.</td></tr><% } %>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="card">
+    <h2>Funder attribution</h2>
+    <table class="table">
+      <thead><tr><th>Funder</th><th>Pounds distributed</th></tr></thead>
+      <tbody>
+        <% grants.forEach(function (row) { %>
+          <tr><td><%= row.funder %></td><td><%= Number(row.pounds).toFixed(1) %></td></tr>
+        <% }) %>
+        <% if (!grants.length) { %><tr><td colspan="2" class="muted">No grant-linked checkouts yet.</td></tr><% } %>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<section class="card">
+  <h2>Restock route (aisle-sequenced)</h2>
+  <table class="table">
+    <thead><tr><th>Aisle</th><th>Shelf</th><th>Bin</th><th>Item</th><th>On hand</th><th>Min</th></tr></thead>
+    <tbody>
+      <% replenishment.forEach(function (row) { %>
+        <tr>
+          <td><%= row.aisle %></td><td><%= row.shelf %></td><td><%= row.bin %></td>
+          <td><%= row.name %></td><td><%= row.on_hand %></td><td><%= row.min_threshold %></td>
+        </tr>
+      <% }) %>
+      <% if (!replenishment.length) { %><tr><td colspan="6" class="muted">All bins above threshold.</td></tr><% } %>
+    </tbody>
+  </table>
+</section>
+
+<section class="card">
+  <h2>FIFO expiry watch (≤ 7 days)</h2>
+  <table class="table">
+    <thead><tr><th>Expires</th><th>Days left</th><th>Item</th><th>Lot</th><th>Remaining</th></tr></thead>
+    <tbody>
+      <% expiring.forEach(function (row) { %>
+        <tr>
+          <td><%= new Date(row.expires_on).toISOString().slice(0, 10) %></td>
+          <td><%= row.days_left %></td>
+          <td><%= row.name %></td>
+          <td><code><%= row.lot_code %></code></td>
+          <td><%= row.quantity_remaining %></td>
+        </tr>
+      <% }) %>
+      <% if (!expiring.length) { %><tr><td colspan="5" class="muted">No lots expiring this week.</td></tr><% } %>
+    </tbody>
+  </table>
+</section>
+
+<%- include('partials/foot') %>

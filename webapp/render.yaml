@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: epic-cure-mtg
+    runtime: node
+    plan: free
+    region: ohio
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_VERSION
+        value: 20.18.1
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: PHI_KEY
+        generateValue: true
+      - key: MAX_FLOOR_CAPACITY
+        value: 25
+      # Set manually in the Render dashboard (from the Render Postgres instance)
+      - key: DATABASE_URL
+        sync: false
+      - key: PGSSL
+        value: true

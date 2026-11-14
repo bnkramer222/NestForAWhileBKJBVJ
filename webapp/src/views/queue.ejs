@@ -1,0 +1,23 @@
+<%- include('partials/head') %>
+
+<section class="hero">
+  <p class="eyebrow">Floor at capacity</p>
+  <h1>You are in line.</h1>
+  <p class="lead">
+    <%= clientName %>, the market floor is full right now. Your place is held — no need to stand at the desk.
+  </p>
+</section>
+
+<section class="card card--elevated queue-card">
+  <p class="queue-position"><span><%= position %></span></p>
+  <p class="muted">households ahead of you: <strong><%= Math.max(position - 1, 0) %></strong></p>
+  <p class="muted small">This page refreshes every 20 seconds. A volunteer will call your name when a slot opens.</p>
+  <p>
+    <a class="btn btn--ghost" href="/queue?token=<%= refreshToken %>">Refresh now</a>
+    <a class="btn btn--ghost" href="/kiosk">Leave the line</a>
+  </p>
+</section>
+
+<meta http-equiv="refresh" content="20;url=/queue?token=<%= refreshToken %>">
+
+<%- include('partials/foot') %>
