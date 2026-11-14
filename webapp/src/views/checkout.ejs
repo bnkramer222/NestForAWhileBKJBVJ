@@ -31,6 +31,8 @@
       <section class="card">
         <h2><%= clientName %></h2>
         <p class="muted small">Session status: <strong><%= sessionStatus %></strong></p>
+        <% if (tierLabel) { %><p class="small">Conditions (ICD-10): <strong><%= tierLabel %></strong></p><% } %>
+        <p class="small">Allergies: <strong class="<%= allergyLabels.length ? 'text-alert' : '' %>"><%= allergyLabels.length ? allergyLabels.join(', ') : 'none on file' %></strong></p>
         <% if (sessionStatus === 'active') { %>
           <form id="checkout-scan" class="stack">
             <label for="checkout-sku">Scan item</label>

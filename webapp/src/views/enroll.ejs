@@ -45,11 +45,21 @@
     </div>
   </fieldset>
 
-  <div class="stack">
-    <label for="allergies">Food allergies (optional, comma separated)</label>
-    <input id="allergies" name="allergies" type="text" value="<%= values.allergies %>" placeholder="dairy, peanuts">
-    <p class="muted small">Allergens matching an item force it to red for your profile.</p>
-  </div>
+  <fieldset class="stack">
+    <legend>Food allergies <span class="muted small">(optional — tap all that apply)</span></legend>
+    <div class="chip-grid">
+      <% allergenOptions.forEach(function (option) { %>
+        <label class="chip">
+          <input type="checkbox" name="allergies" value="<%= option.key %>"
+                 <%= values.allergies.includes(option.key) ? 'checked' : '' %>>
+          <span><span aria-hidden="true"><%= option.icon %></span> <%= option.label %></span>
+        </label>
+      <% }) %>
+    </div>
+    <label for="allergies_other" class="small">Something else? <span class="muted">(optional, separate with commas)</span></label>
+    <input id="allergies_other" name="allergies_other" type="text" maxlength="160" value="<%= values.allergiesOther %>" placeholder="e.g. strawberries">
+    <p class="muted small">We'll mark any item with these as "Not the best fit" for you.</p>
+  </fieldset>
 
   <fieldset class="stack">
     <legend>Latest health readings (optional)</legend>

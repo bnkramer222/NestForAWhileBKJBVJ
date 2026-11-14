@@ -1,3 +1,4 @@
+import { allergyMatches, allergenLabel } from '../lib/allergens.js';
 /**
  * Clinical dietary matrix — the deterministic System of Record rules engine.
  * The LLM layer may explain or personalize, but it can NEVER downgrade a
@@ -172,9 +173,9 @@ export function evaluateProduct(product, { conditions = [], allergies = [] } = {
   }
 
   for (const allergen of product.allergens || []) {
-    if (allergies.some((a) => String(a).toLowerCase() === String(allergen).toLowerCase())) {
+    if (allergies.some((a) => allergyMatches(a, allergen))) {
       status = 'restricted';
-      reasons.push(`Allergen on client profile: ${allergen}.`);
+      reasons.push(`Contains ${allergenLabel(allergen).toLowerCase()}, which is on your allergy list.`);
       ruleIds.push(`allergen:${allergen}`);
     }
   }

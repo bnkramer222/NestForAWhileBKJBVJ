@@ -1,5 +1,6 @@
 import * as clientModel from '../models/client.model.js';
 import * as analyticsModel from '../models/analytics.model.js';
+import { ALLERGENS, normalizeAllergen, allergenLabel } from '../lib/allergens.js';
 import { resolveTier } from '../services/dietaryMatrix.js';
 import QRCode from 'qrcode';
 import { ah } from '../lib/asyncHandler.js';
@@ -32,12 +33,14 @@ function renderForm(res, { conditions, error = null, values = {}, status = 200 }
     title: 'Sign up',
     bodyClass: 'enroll',
     conditions,
+    allergenOptions: ALLERGENS,
     error,
     values: {
       name: values.name || '',
       householdSize: Number(values.householdSize || 2),
       conditions: values.conditions || [],
-      allergies: values.allergies || '',
+      allergies: values.allergies || [],
+      allergiesOther: values.allergiesOther || '',
       ...Object.fromEntries(BIOMETRIC_FIELDS.map(([field]) => [field, values[field] ?? ''])),
     },
   });
@@ -55,7 +58,8 @@ export const submitEnroll = ah(async (req, res) => {
     name: String(req.body.name || '').trim(),
     householdSize: Number(req.body.household_size || 0),
     conditions: [].concat(req.body.conditions || []).map(String),
-    allergies: String(req.body.allergies || '').trim(),
+    allergies: [].concat(req.body.allergies || []).map(String),
+    allergiesOther: String(req.body.allergies_other || '').trim(),
     ...Object.fromEntries(BIOMETRIC_FIELDS.map(([field]) => [field, String(req.body[field] ?? '').trim()])),
   };
 
@@ -71,12 +75,15 @@ export const submitEnroll = ah(async (req, res) => {
     return renderForm(res, { conditions, error: 'One of the selected conditions is not in the clinical catalog.', values, status: 400 });
   }
 
-  const allergies = values.allergies
-    .split(',')
-    .map((entry) => entry.trim().toLowerCase())
-    .filter(Boolean);
-  if (allergies.length > 10 || allergies.some((entry) => entry.length > 30)) {
-    return renderForm(res, { conditions, error: 'List up to 10 allergies, comma separated.', values, status: 400 });
+  // Checked boxes + anything typed under "Something else", normalized to the catalog vocabulary
+  // (e.g. "milk" -> dairy, "peanut" -> peanuts) so every allergy actually matches product flags.
+  const typed = values.allergiesOther.split(',').map((entry) => entry.trim()).filter(Boolean);
+  if (typed.length > 5 || typed.some((entry) => entry.length > 30)) {
+    return renderForm(res, { conditions, error: 'Please list up to 5 other allergies, separated by commas.', values, status: 400 });
+  }
+  const allergies = [...new Set([...values.allergies, ...typed].map(normalizeAllergen).filter(Boolean))];
+  if (allergies.length > 15) {
+    return renderForm(res, { conditions, error: 'Please choose up to 15 allergies.', values, status: 400 });
   }
 
   const biometrics = parseBiometrics(req.body);
@@ -96,7 +103,7 @@ export const submitEnroll = ah(async (req, res) => {
   await analyticsModel.addBiometricReading(enrollment.id, biometrics.reading);
 
   res.status(201).render('enroll-success', {
-    title: 'Enrollment complete',
+    title: 'All set',
     bodyClass: 'enroll',
     token: enrollment.token,
     tokenQr: await QRCode.toDataURL(enrollment.token, { margin: 1, width: 180 }),
@@ -105,6 +112,6 @@ export const submitEnroll = ah(async (req, res) => {
     tier,
     conditions,
     selectedConditions: values.conditions,
-    allergies,
+    allergies: allergies.map(allergenLabel),
   });
 });

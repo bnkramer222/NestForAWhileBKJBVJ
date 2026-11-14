@@ -12,6 +12,9 @@
   <div class="tier-note">
     <strong>Your food plan: <%= tier.label %></strong><br>
     <%= tier.notes %>
+    <% if (allergyLabels.length) { %>
+      <p class="allergy-line">🚫 <strong>Avoiding:</strong> <%= allergyLabels.join(', ') %></p>
+    <% } %>
   </div>
 </section>
 
