@@ -34,12 +34,10 @@ export const showShop = ah(async (req, res) => {
     householdSize: ctx.client.householdSize,
   });
   const cart = await sessionModel.getCart(ctx.shopping.id);
-console.log('SHOP LOCALS:', res.locals);
-console.log('INCLUDE TYPE:', typeof res.locals.include);
   res.render('shop', {
     title: 'Shop',
     bodyClass: 'shop',
-    client: ctx.client,
+    shopper: ctx.client,
     tier: recommendations.tier,
     needs: recommendations.needs,
     recommendations: recommendations.items,
