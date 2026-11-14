@@ -1,7 +1,10 @@
   </main>
   <footer class="foot">
-    <p>Epic Cure MTG prototype · dietary guidance is informational, not medical advice · St. Augustine, FL</p>
+    <p><%= brand.name %> by <%= brand.org %> · Free groceries, no ID, no paperwork · Food guidance is general information, not medical advice.</p>
   </footer>
+  <% if (typeof bodyClass !== 'undefined' && (bodyClass === 'shop' || bodyClass === 'checkout' || bodyClass === 'kiosk')) { %>
+  <script src="/static/vendor/html5-qrcode.min.js" defer></script>
+  <% } %>
   <script src="/static/js/app.js" defer></script>
 </body>
 </html>

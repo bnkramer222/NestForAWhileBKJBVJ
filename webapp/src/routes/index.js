@@ -1,11 +1,12 @@
 import { Router } from 'express';
 
-import { showKiosk, checkIn, showQueueStatus } from '../controllers/kiosk.controller.js';
+import { showKiosk, checkIn, showQueueStatus, leaveLine } from '../controllers/kiosk.controller.js';
 import {
   showShop,
   scanItem,
   getCart,
   addItem,
+  setQuantity,
   removeItem,
   getRecipes,
   finishSession,
@@ -17,19 +18,22 @@ import {
   apiRemove,
   apiComplete,
 } from '../controllers/checkout.controller.js';
-import { showDashboard } from '../controllers/dashboard.controller.js';
+import { showDashboard, exportCsv } from '../controllers/dashboard.controller.js';
 import { health } from '../controllers/health.controller.js';
+import { showBarcodes } from '../controllers/demo.controller.js';
 import { showEnroll, submitEnroll } from '../controllers/enrollment.controller.js';
 
 const router = Router();
 
 router.get('/', (req, res) => res.redirect('/kiosk'));
 router.get('/healthz', health);
+router.get('/barcodes', showBarcodes);
 
 // Epic 1 — kiosk check-in and flow control
 router.get('/kiosk', showKiosk);
 router.post('/kiosk/check-in', checkIn);
 router.get('/queue', showQueueStatus);
+router.post('/queue/leave', leaveLine);
 
 // Epic 2 — client profile creation (US-2.1)
 router.get('/enroll', showEnroll);
@@ -44,11 +48,13 @@ router.get('/checkout', showCheckout);
 
 // Epic 5 — analytics
 router.get('/dashboard', showDashboard);
+router.get('/dashboard/export/:report.csv', exportCsv);
 
 // JSON API used by the mobile shopping companion and volunteer terminal
 router.post('/api/scan', scanItem);
 router.get('/api/cart', getCart);
 router.post('/api/cart', addItem);
+router.patch('/api/cart/:sku', setQuantity);
 router.delete('/api/cart/:sku', removeItem);
 router.get('/api/recipes', getRecipes);
 

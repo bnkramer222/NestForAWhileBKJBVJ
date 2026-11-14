@@ -19,7 +19,7 @@ export const checkIn = ah(async (req, res) => {
     return res.status(400).render('kiosk', {
       title: 'Check in',
       bodyClass: 'kiosk',
-      error: 'Enter the enrollment token printed on your MTG card.',
+      error: 'Please enter the code printed on your card (it looks like MTG-1001).',
       floor: null,
     });
   }
@@ -29,7 +29,7 @@ export const checkIn = ah(async (req, res) => {
     return res.status(404).render('kiosk', {
       title: 'Check in',
       bodyClass: 'kiosk',
-      error: 'That token is not recognized. Please see a volunteer at the desk.',
+      error: "We couldn't find that code. Double-check it, or a volunteer at the desk will be happy to help.",
       floor: null,
     });
   }
@@ -40,16 +40,27 @@ export const checkIn = ah(async (req, res) => {
 
   if (expired) {
     return res.status(403).render('error', {
-      title: 'Enrollment expired',
+      title: 'Time to renew',
       status: 403,
-      message: `MTG enrollment for ${client.name} is not active. A volunteer can renew it — no paperwork is required.`,
+      message: `Hi ${client.name}, your membership needs a quick renewal. A volunteer at the desk can do it in a minute — no paperwork.`,
     });
+  }
+
+  // Re-check-in (or a queued household that was just admitted): reuse the open session
+  // instead of claiming a second slot or joining the line twice.
+  const open = await sessionModel.findOpenSessionForClient(client.id);
+  if (open?.status === 'active') {
+    req.session.shopping = { id: open.id, token: open.session_token, clientId: client.id };
+    return res.redirect(303, '/shop');
+  }
+  if (open?.status === 'queue_waiting') {
+    return res.redirect(303, `/queue?token=${encodeURIComponent(open.session_token)}`);
   }
 
   const slot = await sessionModel.claimFloorSlot();
   if (!slot) {
     const queued = await sessionModel.enqueue(client.id);
-    const position = await sessionModel.getQueuedPosition(client.id);
+    const position = await sessionModel.getLivePosition(queued.session_token);
     return res.status(202).render('queue', {
       title: 'Waiting list',
       clientName: client.name,
@@ -77,13 +88,22 @@ export const showQueueStatus = ah(async (req, res) => {
   if (!session) return res.redirect('/kiosk');
 
   if (session.status === 'active') {
-    return res.redirect('/kiosk?ready=1');
+    // Admitted from the line: start shopping on this device without re-entering the token.
+    req.session.shopping = { id: session.id, token: session.session_token, clientId: session.client_id };
+    return res.redirect('/shop');
   }
+  if (session.status !== 'queue_waiting') return res.redirect('/kiosk');
 
   res.render('queue', {
     title: 'Waiting list',
     clientName: decrypt(session.full_name_enc) || 'Your household',
-    position: session.queue_position,
+    position: await sessionModel.getLivePosition(token),
     refreshToken: token,
   });
+});
+
+export const leaveLine = ah(async (req, res) => {
+  const token = String(req.body.token || '').trim();
+  if (token) await sessionModel.leaveQueue(token);
+  res.redirect(303, '/kiosk');
 });

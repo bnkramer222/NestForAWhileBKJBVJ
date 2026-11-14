@@ -3,9 +3,9 @@ export function notFoundHandler(req, res) {
     return res.status(404).json({ error: 'Not found' });
   }
   res.status(404).render('error', {
-    title: 'Not found',
+    title: 'Page not found',
     status: 404,
-    message: 'That page does not exist. Head back to the kiosk to start a session.',
+    message: "We couldn't find that page. Head back to the kiosk and we'll get you shopping.",
   });
 }
 
@@ -15,7 +15,7 @@ export function errorHandler(err, req, res, next) {
   if (status >= 500) console.error('[error]', err);
 
   const payload = {
-    error: status >= 500 ? 'Something went wrong on our side.' : err.message,
+    error: status >= 500 ? "Sorry — something went wrong on our end. Please try again, or ask a volunteer." : err.message,
   };
   if (err.details) payload.details = err.details;
 
@@ -23,7 +23,7 @@ export function errorHandler(err, req, res, next) {
     return res.status(status).json(payload);
   }
   res.status(status).render('error', {
-    title: status >= 500 ? 'Server error' : 'Request blocked',
+    title: status >= 500 ? 'Sorry about that' : "Let's sort this out",
     status,
     message: payload.error,
   });

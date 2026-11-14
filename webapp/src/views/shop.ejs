@@ -1,97 +1,144 @@
 <%- include('partials/head') %>
 
-<section class="session-header">
+<section class="session-header welcome">
   <div>
-    <p class="eyebrow">Shopping session</p>
-    <h1><%= shopper.name %></h1>
+    <p class="eyebrow">You're checked in</p>
+    <h1>Hi, <%= firstName %>! Take your time.</h1>
     <p class="muted">
-      Household of <%= shopper.householdSize %> · <%= tier.label %>
-      <% if (shopper.conditions.length) { %> · ICD-10: <%= shopper.conditions.join(', ') %><% } %>
+      Shopping for <%= shopper.householdSize %> <%= shopper.householdSize === 1 ? 'person' : 'people' %> today.
+      Everything here is free. Pick what your household will enjoy, and we'll help you see what fits your health plan.
     </p>
   </div>
-  <div class="tier-note"><%= tier.notes %></div>
+  <div class="tier-note">
+    <strong>Your food plan: <%= tier.label %></strong><br>
+    <%= tier.notes %>
+  </div>
 </section>
 
-<div id="shop-app" data-token="<%= sessionToken %>">
+<div id="shop-app"
+     data-token="<%= sessionToken %>"
+     data-cart="<%= JSON.stringify(cart) %>"
+     data-status-copy="<%= JSON.stringify(statusCopy) %>">
+
+  <div class="legend" aria-label="What the colors mean">
+    <span><span class="badge badge--approved"><%= statusCopy.approved.label %></span> works well for you</span>
+    <span><span class="badge badge--capped"><%= statusCopy.capped.label %></span> about one serving is best</span>
+    <span><span class="badge badge--restricted"><%= statusCopy.restricted.label %></span> you can still take it — a volunteer will check it with you</span>
+  </div>
+
   <div class="grid grid--two">
     <section class="card">
-      <h2>Scan an item</h2>
-      <p class="muted small">Use a barcode or type the SKU from the shelf label.</p>
+      <h2>Check an item</h2>
+      <p class="muted small">Scan the barcode on the shelf tag, or type the number printed under it.</p>
       <form id="scan-form" class="stack">
-        <label for="sku">SKU / barcode</label>
+        <label for="sku">Item number</label>
         <div class="input-row">
-          <input id="sku" name="sku" type="text" inputmode="numeric" placeholder="e.g. 100101" required>
+          <input id="sku" name="sku" type="text" inputmode="numeric" autocomplete="off" placeholder="e.g. 100101" required>
           <button type="submit" class="btn btn--primary">Check</button>
         </div>
       </form>
-      <button type="button" id="camera-btn" class="btn btn--ghost btn--block">Use camera</button>
-      <video id="camera-preview" class="camera" playsinline muted hidden></video>
-      <p id="scan-hint" class="muted small">Green = approved · Yellow = limited · Red = restricted.</p>
+      <button type="button" id="camera-btn" class="btn btn--ghost btn--block">Scan with camera</button>
+      <div id="camera-preview" class="camera" hidden></div>
       <div id="scan-result" class="result" hidden></div>
     </section>
 
     <section class="card">
-      <h2>Your cart</h2>
-      <ul id="cart-list" class="cart-list">
-        <% if (!cart.length) { %>
-          <li class="muted">Nothing scanned yet.</li>
-        <% } %>
-        <% cart.forEach(function (item) { %>
-          <li data-sku="<%= item.sku %>">
-            <span class="badge badge--<%= item.evaluated_status %>"><%= item.evaluated_status %></span>
-            <span class="cart-name"><%= item.name %></span>
-            <span class="muted">×<%= item.quantity %></span>
-            <button type="button" class="link-btn js-remove" data-sku="<%= item.sku %>">remove</button>
-          </li>
-        <% }) %>
-      </ul>
-      <button type="button" id="recipes-btn" class="btn btn--ghost btn--block">Suggest recipes from my cart</button>
+      <div class="card-head">
+        <h2>Your cart</h2>
+        <span id="cart-count" class="pill">0 items</span>
+      </div>
+      <ul id="cart-list" class="cart-list" aria-live="polite"></ul>
+      <p id="cart-notice" class="notice" role="status" hidden></p>
+      <button type="button" id="recipes-btn" class="btn btn--ghost btn--block">Get meal ideas from my cart</button>
     </section>
   </div>
 
   <section class="card" id="recipes-panel" hidden>
     <div class="card-head">
-      <h2>Recipes for your cart</h2>
+      <h2>Meal ideas for your cart</h2>
       <span id="recipes-source" class="pill"></span>
     </div>
     <div id="recipes-list" class="recipe-grid"></div>
-    <h3>Missing something?</h3>
+    <h3>Want to finish a recipe?</h3>
     <ul id="missing-list" class="missing-list"></ul>
   </section>
 
   <section class="card">
-    <h2>Recommended from today's floor</h2>
-    <p class="muted small">Matched to your clinical tier and current stock. Targets are per household visit.</p>
+    <h2>Picked for you today</h2>
+    <p class="muted small">Good matches for your plan that are on the shelves right now.</p>
     <ul class="targets">
       <% Object.keys(needs).forEach(function (category) { %>
-        <li><span><%= category %></span> <strong><%= needs[category] %> lb</strong></li>
+        <li><span><%= categoryCopy[category] || category %></span> <strong>about <%= needs[category] %> lb</strong></li>
       <% }) %>
     </ul>
     <div class="rec-grid">
       <% recommendations.forEach(function (item) { %>
         <article class="rec">
           <div class="rec-head">
-            <span class="badge badge--<%= item.status %>"><%= item.status %></span>
-            <span class="pill"><%= item.category %></span>
+            <span class="badge badge--<%= item.status %>"><%= statusCopy[item.status].label %></span>
+            <span class="pill"><%= categoryCopy[item.category] || item.category %></span>
           </div>
           <h3><%= item.name %></h3>
           <p class="muted small">Aisle <%= item.aisle %> · Shelf <%= item.shelf %> · Bin <%= item.bin %></p>
-          <p class="muted small"><%= item.onHand %> on hand</p>
-          <% if (item.reasons.length) { %>
-            <p class="small reason"><%= item.reasons[0] %></p>
-          <% } %>
           <button type="button" class="btn btn--ghost btn--sm js-add" data-sku="<%= item.sku %>">Add to cart</button>
         </article>
       <% }) %>
       <% if (!recommendations.length) { %>
-        <p class="muted">No eligible stock matched this profile. A volunteer can help with substitutions.</p>
+        <p class="muted">We're still restocking. A volunteer can help you find good options.</p>
       <% } %>
     </div>
   </section>
 
+  <section class="card" id="browse">
+    <div class="card-head">
+      <h2>Everything on the floor today</h2>
+      <input id="browse-search" class="search" type="search" placeholder="Search, e.g. rice" aria-label="Search all items">
+    </div>
+    <p class="muted small">You're welcome to take anything. Colors show how each item fits your plan.</p>
+    <% catalog.forEach(function (group) { %>
+      <details class="browse-group">
+        <summary><%= group.label %> <span class="muted small">(<%= group.items.length %>)</span></summary>
+        <ul class="browse-list">
+          <% group.items.forEach(function (item) { %>
+            <li class="browse-item" data-name="<%= item.name.toLowerCase() %>">
+              <span class="badge badge--<%= item.status %>"><%= statusCopy[item.status].label %></span>
+              <span class="browse-name"><%= item.name %>
+                <span class="muted small">· Aisle <%= item.aisle %>, Shelf <%= item.shelf %> · #<%= item.sku %></span>
+              </span>
+              <button type="button" class="btn btn--ghost btn--sm js-add" data-sku="<%= item.sku %>">
+                <%= item.status === 'restricted' ? 'Add anyway' : 'Add' %>
+              </button>
+            </li>
+          <% }) %>
+        </ul>
+      </details>
+    <% }) %>
+    <p id="browse-empty" class="muted" hidden>No items match that search.</p>
+  </section>
+
+  <section class="card exit-pass" id="exit-pass">
+    <h2>Your exit pass</h2>
+    <p class="muted small">When you're done, show this to the volunteer at the exit. They'll help you bag up.</p>
+    <img src="<%= exitQr %>" alt="Exit pass QR code for session <%= sessionToken %>" width="220" height="220">
+    <p class="exit-token"><code><%= sessionToken %></code></p>
+  </section>
+
   <form method="post" action="/shop/exit" class="end-session">
-    <button type="submit" class="btn btn--ghost">End session without checking out</button>
+    <button type="submit" class="btn btn--ghost">Leave without checking out</button>
   </form>
+</div>
+
+<div id="confirm-sheet" class="sheet" role="dialog" aria-modal="true" aria-labelledby="confirm-title" hidden>
+  <div class="sheet-card">
+    <h2 id="confirm-title">Probably not the best fit for you</h2>
+    <p id="confirm-name" class="sheet-item"></p>
+    <ul id="confirm-reasons" class="small"></ul>
+    <p class="small muted"><%= statusCopy.restricted.detail %></p>
+    <div class="sheet-actions">
+      <button type="button" id="confirm-no" class="btn btn--primary">Leave it on the shelf</button>
+      <button type="button" id="confirm-yes" class="btn btn--ghost">Add anyway</button>
+    </div>
+  </div>
 </div>
 
 <%- include('partials/foot') %>

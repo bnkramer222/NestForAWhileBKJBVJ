@@ -192,6 +192,56 @@ SELECT date_trunc('month', ct.created_at) AS month,
   JOIN products p ON p.sku = cl.sku
  GROUP BY 1, 2, 3;
 
+-- ---------------------------------------------------------------- biometric tracking (US-5.1)
+-- Readings are keyed only by the client's random uuid (no name/token). Values stay numeric so
+-- the analytics layer can aggregate them; identity lives in the encrypted clients table.
+CREATE TABLE IF NOT EXISTS client_biometrics (
+  id          bigserial PRIMARY KEY,
+  client_id   uuid NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+  measured_on date NOT NULL DEFAULT CURRENT_DATE,
+  a1c_pct     numeric(4, 1) CHECK (a1c_pct BETWEEN 3 AND 20),
+  systolic    integer CHECK (systolic BETWEEN 60 AND 260),
+  diastolic   integer CHECK (diastolic BETWEEN 30 AND 160),
+  egfr        numeric(5, 1) CHECK (egfr BETWEEN 1 AND 150),
+  weight_lbs  numeric(5, 1) CHECK (weight_lbs BETWEEN 40 AND 700),
+  created_at  timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_biometrics_client ON client_biometrics(client_id, measured_on);
+
+-- De-identified grant ledger for audit export (US-5.2): one row per funder × grant × month ×
+-- category × clinical status. No client, session, or transaction identifiers.
+CREATE OR REPLACE VIEW analytics_grant_ledger AS
+SELECT date_trunc('month', ct.created_at)::date AS month,
+       COALESCE(g.funder, 'Unattributed')        AS funder,
+       COALESCE(g.grant_code, 'n/a')             AS grant_code,
+       p.category,
+       cl.evaluated_status,
+       SUM(cl.quantity)::int                     AS units,
+       SUM(cl.weight_lbs)::numeric(12, 3)        AS weight_lbs
+  FROM checkout_lines cl
+  JOIN checkout_transactions ct ON ct.id = cl.transaction_id
+  JOIN products p ON p.sku = cl.sku
+  LEFT JOIN grants g ON g.id = cl.grant_id
+ GROUP BY 1, 2, 3, 4, 5;
+
+-- Pounds by clinical condition group × food category. A household with several conditions
+-- counts toward each of its condition groups (documented in the export header).
+CREATE OR REPLACE VIEW analytics_condition_distribution AS
+SELECT date_trunc('month', ct.created_at)::date AS month,
+       cc2.condition_key,
+       p.category,
+       SUM(cl.quantity)::int                     AS units,
+       SUM(cl.weight_lbs)::numeric(12, 3)        AS weight_lbs
+  FROM checkout_lines cl
+  JOIN checkout_transactions ct ON ct.id = cl.transaction_id
+  JOIN shopping_sessions s ON s.id = ct.session_id
+  JOIN products p ON p.sku = cl.sku
+  JOIN (SELECT DISTINCT c.client_id, cat.condition_key
+          FROM client_conditions c
+          JOIN condition_catalog cat ON cat.code = c.condition_code) cc2 ON cc2.client_id = s.client_id
+ GROUP BY 1, 2, 3;
+
 -- ---------------------------------------------------------------- express-session store
 CREATE TABLE IF NOT EXISTS "session" (
   "sid"    varchar NOT NULL COLLATE "default",

@@ -17,6 +17,12 @@ const personas = [
     conditions: ['E11.9', 'I10'],
     allergies: [],
     note: 'Diabetes + hypertension. Two children at home.',
+    // Synthetic demo readings for the outcomes dashboard (baseline, 3 months, today).
+    biometrics: [
+      { daysAgo: 180, a1c_pct: 8.4, systolic: 148, diastolic: 92, weight_lbs: 182 },
+      { daysAgo: 90, a1c_pct: 7.9, systolic: 141, diastolic: 89, weight_lbs: 179 },
+      { daysAgo: 0, a1c_pct: 7.5, systolic: 136, diastolic: 86, weight_lbs: 176 },
+    ],
   },
   {
     token: 'MTG-1002',
@@ -25,6 +31,12 @@ const personas = [
     conditions: ['N18.30', 'I10'],
     allergies: [],
     note: 'CKD stage 3 + hypertension. Lives with spouse and mother.',
+    // Synthetic demo readings for the outcomes dashboard (baseline, 3 months, today).
+    biometrics: [
+      { daysAgo: 180, egfr: 48, systolic: 152, diastolic: 94 },
+      { daysAgo: 90, egfr: 49, systolic: 146, diastolic: 90 },
+      { daysAgo: 0, egfr: 50, systolic: 140, diastolic: 88 },
+    ],
   },
   {
     token: 'MTG-1003',
@@ -33,6 +45,12 @@ const personas = [
     conditions: ['E11.9', 'N18.30', 'I10'],
     allergies: ['dairy'],
     note: 'Triple chronicity + dairy allergy. Highest-risk household.',
+    // Synthetic demo readings for the outcomes dashboard (baseline, 3 months, today).
+    biometrics: [
+      { daysAgo: 180, a1c_pct: 9.1, egfr: 41, systolic: 156, diastolic: 96 },
+      { daysAgo: 90, a1c_pct: 8.6, egfr: 41, systolic: 150, diastolic: 93 },
+      { daysAgo: 0, a1c_pct: 8.2, egfr: 42, systolic: 144, diastolic: 90 },
+    ],
   },
   {
     token: 'MTG-1004',
@@ -41,6 +59,12 @@ const personas = [
     conditions: ['I50.9', 'I10', 'E11.9'],
     allergies: [],
     note: 'Heart failure + hypertension + diabetes. Low-sodium priority.',
+    // Synthetic demo readings for the outcomes dashboard (baseline, 3 months, today).
+    biometrics: [
+      { daysAgo: 180, a1c_pct: 7.6, systolic: 142, diastolic: 88, weight_lbs: 214 },
+      { daysAgo: 90, a1c_pct: 7.4, systolic: 136, diastolic: 84, weight_lbs: 209 },
+      { daysAgo: 0, a1c_pct: 7.1, systolic: 132, diastolic: 82, weight_lbs: 205 },
+    ],
   },
   {
     token: 'MTG-1005',
@@ -49,6 +73,12 @@ const personas = [
     conditions: ['I10'],
     allergies: ['gluten'],
     note: 'Hypertension only, gluten allergy, large household.',
+    // Synthetic demo readings for the outcomes dashboard (baseline, 3 months, today).
+    biometrics: [
+      { daysAgo: 180, systolic: 138, diastolic: 88 },
+      { daysAgo: 90, systolic: 136, diastolic: 87 },
+      { daysAgo: 0, systolic: 139, diastolic: 88 },
+    ],
   },
 ];
 
@@ -96,12 +126,31 @@ async function run() {
         [clientId, allergen],
       );
     }
+
+    // Re-seeding replaces this persona's readings so the trend data stays consistent.
+    await pool.query('DELETE FROM client_biometrics WHERE client_id = $1', [clientId]);
+    for (const reading of persona.biometrics || []) {
+      await pool.query(
+        `INSERT INTO client_biometrics (client_id, measured_on, a1c_pct, systolic, diastolic, egfr, weight_lbs)
+         VALUES ($1, CURRENT_DATE - $2::int, $3, $4, $5, $6, $7)`,
+        [
+          clientId,
+          reading.daysAgo,
+          reading.a1c_pct ?? null,
+          reading.systolic ?? null,
+          reading.diastolic ?? null,
+          reading.egfr ?? null,
+          reading.weight_lbs ?? null,
+        ],
+      );
+    }
   }
 
   const counts = await pool.query(
     `SELECT (SELECT COUNT(*) FROM products)::int AS products,
             (SELECT COUNT(*) FROM clients)::int  AS clients,
-            (SELECT COUNT(*) FROM dietary_rules)::int AS rules`,
+            (SELECT COUNT(*) FROM dietary_rules)::int AS rules,
+            (SELECT COUNT(*) FROM client_biometrics)::int AS biometric_readings`,
   );
 
   console.log('[seed] done:', counts.rows[0]);

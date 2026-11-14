@@ -1,0 +1,41 @@
+<%- include('partials/head') %>
+
+<section class="hero no-print-hide">
+  <p class="eyebrow">For demos and testing</p>
+  <h1>Demo barcodes</h1>
+  <p class="lead">
+    Print this page (or open it on a second screen) and scan the codes with the
+    <strong>Scan with camera</strong> button on the Kiosk, Shop, or Checkout pages.
+  </p>
+  <p class="no-print"><button type="button" class="btn btn--primary js-print">Print this page</button></p>
+</section>
+
+<section class="card">
+  <h2>Client cards — scan at the kiosk to check in</h2>
+  <div class="code-grid code-grid--clients">
+    <% clients.forEach(function (client) { %>
+      <article class="code-card">
+        <img src="<%= client.qr %>" alt="QR code for <%= client.token %>" width="150" height="150">
+        <strong><%= client.token %></strong>
+        <span class="muted small"><%= client.profile %></span>
+      </article>
+    <% }) %>
+  </div>
+</section>
+
+<% groups.forEach(function (group) { %>
+  <section class="card">
+    <h2><%= group.label %> — shelf tags</h2>
+    <div class="code-grid">
+      <% group.items.forEach(function (item) { %>
+        <article class="code-card">
+          <span class="code-name"><%= item.name %></span>
+          <img src="<%= item.barcode %>" alt="Barcode <%= item.sku %>" class="barcode">
+          <span class="muted small"><%= item.location %></span>
+        </article>
+      <% }) %>
+    </div>
+  </section>
+<% }) %>
+
+<%- include('partials/foot') %>

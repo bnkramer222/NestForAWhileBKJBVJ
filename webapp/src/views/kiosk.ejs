@@ -1,11 +1,11 @@
 <%- include('partials/head') %>
 
 <section class="hero">
-  <p class="eyebrow">Self-service check-in</p>
-  <h1>Welcome to the market.</h1>
+  <p class="eyebrow">Welcome — we're glad you're here</p>
+  <h1>Come on in and shop.</h1>
   <p class="lead">
-    No paperwork. No ID. Enter your MTG card token and we will build a basket that fits
-    your health needs and what is on the floor today.
+    Everything is free. No ID, no paperwork, no questions. Enter or scan the code on your card,
+    and we'll help you find fresh food that fits your health.
   </p>
 </section>
 
@@ -16,13 +16,15 @@
       <div class="banner banner--error" role="alert"><%= error %></div>
     <% } %>
     <form method="post" action="/kiosk/check-in" class="stack">
-      <label for="token">MTG card token</label>
+      <label for="token">Your card code</label>
       <input id="token" name="token" type="text" inputmode="text" autocomplete="off"
              placeholder="MTG-1001" autocapitalize="characters" required>
       <button type="submit" class="btn btn--primary btn--lg">Check in</button>
     </form>
+    <button type="button" id="kiosk-camera-btn" class="btn btn--ghost btn--block">Scan my card</button>
+    <div id="kiosk-camera" class="camera" hidden></div>
 
-    <p class="small">New to MTG? <a href="/enroll">Create a profile</a> — no ID required.</p>
+    <p class="small">First time here? <a href="/enroll">Sign up in about two minutes</a> — no ID needed.</p>
   </section>
 
   <section class="card">

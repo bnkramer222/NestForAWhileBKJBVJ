@@ -11,6 +11,17 @@ export async function findBySku(sku) {
   return rows[0] || null;
 }
 
+export async function findManyBySkus(skus) {
+  if (!skus.length) return [];
+  const { rows } = await db.query(`${WITH_STOCK} WHERE p.sku = ANY($1::text[])`, [skus]);
+  return rows;
+}
+
+export async function listActive() {
+  const { rows } = await db.query(`${WITH_STOCK} WHERE p.is_active ORDER BY p.category, p.aisle, p.shelf, p.bin`);
+  return rows;
+}
+
 export async function listInStock({ limit = 200, category = null } = {}) {
   const params = [limit];
   let categoryFilter = '';

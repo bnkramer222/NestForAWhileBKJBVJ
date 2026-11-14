@@ -11,11 +11,14 @@
 <section class="card card--elevated queue-card">
   <p class="queue-position"><span><%= position %></span></p>
   <p class="muted">households ahead of you: <strong><%= Math.max(position - 1, 0) %></strong></p>
-  <p class="muted small">This page refreshes every 20 seconds. A volunteer will call your name when a slot opens.</p>
+  <p class="muted small">This page refreshes every 20 seconds. When a slot opens you are admitted automatically and this page takes you to your shopping list.</p>
   <p>
     <a class="btn btn--ghost" href="/queue?token=<%= refreshToken %>">Refresh now</a>
-    <a class="btn btn--ghost" href="/kiosk">Leave the line</a>
   </p>
+  <form method="post" action="/queue/leave">
+    <input type="hidden" name="token" value="<%= refreshToken %>">
+    <button type="submit" class="btn btn--ghost">Leave the line</button>
+  </form>
 </section>
 
 <meta http-equiv="refresh" content="20;url=/queue?token=<%= refreshToken %>">

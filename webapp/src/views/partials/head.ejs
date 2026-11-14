@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><%= title %> · Epic Cure MTG</title>
+  <title><%= title %> · <%= brand.name %></title>
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/static/css/styles.css">
   <meta name="theme-color" content="#14532d">
 </head>
@@ -11,15 +12,16 @@
   <a class="skip-link" href="#main">Skip to content</a>
   <header class="topbar">
     <a class="brand" href="/kiosk">
-      <span class="brand-mark" aria-hidden="true">EC</span>
-      <span class="brand-text">Epic Cure <small>Medically Tailored Groceries</small></span>
+      <span class="brand-mark" aria-hidden="true"><%= brand.mark %></span>
+      <span class="brand-text"><%= brand.name %> <small>by <%= brand.org %> · <%= brand.tagline %></small></span>
     </a>
     <nav class="nav" aria-label="Primary">
       <a href="/kiosk" class="<%= currentPath === '/kiosk' ? 'is-active' : '' %>">Kiosk</a>
-      <a href="/enroll" class="<%= currentPath === '/enroll' ? 'is-active' : '' %>">Enroll</a>
+      <a href="/enroll" class="<%= currentPath === '/enroll' ? 'is-active' : '' %>">Sign up</a>
       <a href="/shop" class="<%= currentPath === '/shop' ? 'is-active' : '' %>">Shop</a>
       <a href="/checkout" class="<%= currentPath === '/checkout' ? 'is-active' : '' %>">Checkout</a>
       <a href="/dashboard" class="<%= currentPath === '/dashboard' ? 'is-active' : '' %>">Dashboard</a>
+      <a href="/barcodes" class="<%= currentPath === '/barcodes' ? 'is-active' : '' %>">Demo codes</a>
     </nav>
   </header>
 

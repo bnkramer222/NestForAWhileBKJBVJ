@@ -1,40 +1,40 @@
 <%- include('partials/head') %>
 
 <section class="hero">
-  <p class="eyebrow">Enrollment complete</p>
-  <h1>You are in, <%= name %>.</h1>
+  <p class="eyebrow">All set</p>
+  <h1>Welcome, <%= name %>!</h1>
   <p class="lead">
-    Keep this token. It is the only thing you need at the kiosk — no ID, no paperwork. It is shown
-    once and is stored only as a one-way hash.
+    This is your card. It's the only thing you need at the kiosk — no ID, no paperwork.
+    Take a photo of it now, because for your privacy we can't show it again.
   </p>
 </section>
 
 <div class="grid grid--two">
   <section class="card card--elevated">
-    <h2>Your MTG token</h2>
+    <h2>Your card</h2>
+    <img src="<%= tokenQr %>" alt="QR code for your card <%= token %>" width="180" height="180" class="card-qr">
     <p class="token"><%= token %></p>
-    <p class="muted small">Write it down or screenshot it. We cannot show it again.</p>
+    <p class="muted small">Scan this QR at the kiosk, or type the code.</p>
     <a class="btn btn--primary" href="/kiosk">Start shopping</a>
   </section>
 
   <section class="card">
-    <h2>Your dietary profile</h2>
+    <h2>Your food plan</h2>
     <p><strong><%= tier.label %></strong></p>
     <p class="muted small"><%= tier.notes %></p>
     <ul class="summary-list">
       <li>Household size: <strong><%= householdSize %></strong></li>
       <li>Conditions:
-        <strong><%= selectedConditions.length ? selectedConditions.join(', ') : 'none selected' %></strong>
+        <strong><%= selectedConditions.length ? conditions.filter(function (c) { return selectedConditions.indexOf(c.code) !== -1; }).map(function (c) { return c.name; }).join('; ') : 'none selected' %></strong>
       </li>
       <li>Allergies: <strong><%= allergies.length ? allergies.join(', ') : 'none' %></strong></li>
     </ul>
     <p class="muted small">
-      Tier assignment is automatic from the clinical matrix. A volunteer can update it if your
-      conditions change.
+      Your plan was set up automatically. If anything changes with your health, a volunteer can update it.
     </p>
   </section>
 </div>
 
-<p class="muted small"><a href="/enroll">Enroll another household</a></p>
+<p class="muted small"><a href="/enroll">Sign up another household</a></p>
 
 <%- include('partials/foot') %>

@@ -15,9 +15,48 @@
   <article class="stat"><span class="stat-value"><%= summary.expiring_lots %></span><span class="stat-label">lots expiring ≤ 7d</span></article>
 </section>
 
+<section class="card">
+  <div class="card-head">
+    <h2>Clinical outcome trends</h2>
+    <a class="btn btn--ghost btn--sm" href="/dashboard/export/outcomes.csv">Export CSV</a>
+  </div>
+  <p class="muted small">
+    De-identified cohort averages at program markers (baseline, 3 months, 6 months after each client's first reading).
+    A household with several conditions counts in each of its condition groups.
+  </p>
+  <table class="table">
+    <thead><tr><th>Condition</th><th>Marker</th><th>Clients</th><th>Baseline</th><th>3 mo</th><th>6 mo</th><th>Change</th></tr></thead>
+    <tbody>
+      <% outcomes.forEach(function (row) { %>
+        <% var latest = row.delta6 !== null ? row.delta6 : row.delta3; %>
+        <tr>
+          <td><%= row.condition.replace('_', ' ') %></td>
+          <td><%= row.marker %></td>
+          <td><%= row.clients %></td>
+          <td><%= row.baseline %></td>
+          <td><%= row.month3 === null ? '—' : row.month3 %></td>
+          <td><%= row.month6 === null ? '—' : row.month6 %></td>
+          <td>
+            <% if (latest === null) { %>—<% } else { %>
+              <% var badge = { improving: 'approved', worsening: 'restricted', flat: 'capped' }[row.trend]; %>
+              <span class="badge badge--<%= badge %>">
+                <%= latest > 0 ? '+' : '' %><%= latest %> · <%= row.trend %>
+              </span>
+            <% } %>
+          </td>
+        </tr>
+      <% }) %>
+      <% if (!outcomes.length) { %><tr><td colspan="7" class="muted">No biometric readings yet.</td></tr><% } %>
+    </tbody>
+  </table>
+</section>
+
 <div class="grid grid--two">
   <section class="card">
-    <h2>Distribution by category</h2>
+    <div class="card-head">
+      <h2>Distribution by category</h2>
+      <a class="btn btn--ghost btn--sm" href="/dashboard/export/conditions.csv">Export by condition</a>
+    </div>
     <table class="table">
       <thead><tr><th>Month</th><th>Category</th><th>Status</th><th>Units</th><th>Weight (lb)</th></tr></thead>
       <tbody>
@@ -36,7 +75,10 @@
   </section>
 
   <section class="card">
-    <h2>Funder attribution</h2>
+    <div class="card-head">
+      <h2>Funder attribution</h2>
+      <a class="btn btn--ghost btn--sm" href="/dashboard/export/grants.csv">Export grant ledger</a>
+    </div>
     <table class="table">
       <thead><tr><th>Funder</th><th>Pounds distributed</th></tr></thead>
       <tbody>

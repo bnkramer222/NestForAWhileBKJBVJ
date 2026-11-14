@@ -81,5 +81,7 @@ export const apiComplete = ah(async (req, res) => {
   if (!ctx) throw notFound('Session token not recognized.');
 
   const receipt = await sessionModel.completeCheckout(ctx.session.id, actedBy || 'volunteer');
-  res.json({ receipt });
+  // A floor slot just opened — let the next queued household in automatically.
+  const admitted = await sessionModel.admitFromQueue();
+  res.json({ receipt, admittedFromQueue: admitted.length });
 });

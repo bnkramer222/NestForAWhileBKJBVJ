@@ -360,3 +360,41 @@ Which model endpoint are you going with, Groq free tier or Hugging Face? Once yo
 
 okay can you fix and impliment these things for me
 ```
+
+## 007 — 2026-11-14 (Claude)
+
+```text
+claude im working on this software engineering thing and everything works except when you make an account it gives you a token, when the token is used to shop it doesn't load and server crashes
+```
+
+> Outcome: Claude reproduced it against a local Postgres. Root cause: the view variable `client` collided with EJS's `client` render option, disabling `include()` on shop.ejs. Renamed to `shopper`.
+
+## 008 — 2026-11-14 (Claude)
+
+```text
+give the requirements for the project. can we change the title? whats up w the qr code, can we change st augs location?
+```
+
+## 009 — 2026-11-14 (Claude)
+
+```text
+this is the problem case, does my web app do this?
+```
+
+> Outcome: requirements audit. Gaps found: no exit QR/visible session token, queue never advanced, no CSV export (US-5.2), no biometric trends (US-5.1), camera scan unsupported on iPhone/Safari and could not read QR.
+
+## 010 — 2026-11-14 (Claude)
+
+```text
+fix these issues, i have other issues id like to bring to the table as well
+```
+
+> Outcome: exit-pass QR + token on shop page; automatic FIFO admission from the waiting line after checkout/exit; de-identified CSV exports (grant ledger, pounds by condition, outcome trends); client_biometrics table + optional baseline readings at enrollment + 3/6-month trend table on the dashboard; self-hosted html5-qrcode scanner (barcodes + QR, works on iPhone) on shop and checkout. Verified end to end on local Postgres; `npm test` 23/23 passing.
+
+## 011 — 2026-11-14 (Claude)
+
+```text
+checkout says processing even though it processed. title is bad, st aug is bad, qty doesnt update u can only by one of each thing, still give access to things they cant buy or shouldnt by but warn them, bar code needs to work/ give demo bar codes, and make customer feel comfortable
+```
+
+> Outcome: Claude reproduced the stuck checkout in a headless browser (CSS `display` on `.btn` overrode the `hidden` attribute; fixed globally). App renamed "Nourish by Epic Cure" via one config file (`src/config/brand.js`), location removed. Cart quantity +/− controls and a PATCH endpoint. Not-recommended items can be added after a gentle confirmation and are still caught by the checkout hard stop (US-4.1). New `/barcodes` page with Code 128 shelf tags for all 107 products and QR client cards; kiosk can scan a card; new sign-ups get a QR card. Shopper wording rewritten in plain language (no ICD codes shown to shoppers). Verified with a Playwright browser test: 20 checks pass, scanner library decodes the generated barcodes and QR codes.

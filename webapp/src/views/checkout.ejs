@@ -12,6 +12,8 @@
     <input id="token" name="token" type="text" placeholder="ses_… (scan the client's exit QR)" value="<%= token %>">
     <button type="submit" class="btn btn--primary">Load session</button>
   </form>
+  <button type="button" id="token-camera-btn" class="btn btn--ghost btn--block">Scan exit pass QR</button>
+  <div id="token-camera" class="camera" hidden></div>
   <% if (error) { %>
     <div class="banner banner--error" role="alert"><%= error %></div>
   <% } %>
@@ -37,6 +39,8 @@
               <button type="submit" class="btn btn--primary">Add</button>
             </div>
           </form>
+          <button type="button" id="checkout-camera-btn" class="btn btn--ghost btn--block">Scan with camera</button>
+          <div id="checkout-camera" class="camera" hidden></div>
           <p id="checkout-hint" class="muted small">Scanned items join the cart and are re-evaluated on checkout.</p>
         <% } else { %>
           <div class="banner">This session is <%= sessionStatus %>. Nothing further to scan.</div>

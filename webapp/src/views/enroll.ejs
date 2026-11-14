@@ -1,11 +1,11 @@
 <%- include('partials/head') %>
 
 <section class="hero">
-  <p class="eyebrow">MTG enrollment</p>
-  <h1>Join Medically Tailored Groceries.</h1>
+  <p class="eyebrow">Sign up</p>
+  <h1>Let's set you up.</h1>
   <p class="lead">
-    No ID and no paperwork at the door. Tell us your household and health conditions once, and the
-    market will keep your basket clinically safe on every visit.
+    It takes about two minutes. Tell us about your household and any health conditions once, and
+    every visit we'll point you to food that fits. No ID, no paperwork — and your answers stay private.
   </p>
 </section>
 
@@ -18,7 +18,7 @@
     <div class="stack">
       <label for="name">Name</label>
       <input id="name" name="name" type="text" value="<%= values.name %>" maxlength="80" required>
-      <p class="muted small">Stored encrypted (AES-256-GCM). Shown only to you and the volunteer at checkout.</p>
+      <p class="muted small">First name is fine. It's kept private and encrypted.</p>
     </div>
     <div class="stack">
       <label for="household_size">Household size</label>
@@ -51,11 +51,38 @@
     <p class="muted small">Allergens matching an item force it to red for your profile.</p>
   </div>
 
+  <fieldset class="stack">
+    <legend>Latest health readings (optional)</legend>
+    <p class="muted small">From your last clinic visit, if you have them. They become your baseline so the program can show (anonymously) whether health improves over time.</p>
+    <div class="grid grid--two">
+      <div class="stack">
+        <label for="a1c_pct">HbA1c (%)</label>
+        <input id="a1c_pct" name="a1c_pct" type="number" step="0.1" min="3" max="20" inputmode="decimal" value="<%= values.a1c_pct %>">
+      </div>
+      <div class="stack">
+        <label for="egfr">eGFR (mL/min)</label>
+        <input id="egfr" name="egfr" type="number" step="1" min="1" max="150" inputmode="numeric" value="<%= values.egfr %>">
+      </div>
+      <div class="stack">
+        <label for="systolic">Blood pressure — systolic</label>
+        <input id="systolic" name="systolic" type="number" step="1" min="60" max="260" inputmode="numeric" value="<%= values.systolic %>">
+      </div>
+      <div class="stack">
+        <label for="diastolic">Blood pressure — diastolic</label>
+        <input id="diastolic" name="diastolic" type="number" step="1" min="30" max="160" inputmode="numeric" value="<%= values.diastolic %>">
+      </div>
+      <div class="stack">
+        <label for="weight_lbs">Weight (lb)</label>
+        <input id="weight_lbs" name="weight_lbs" type="number" step="0.1" min="40" max="700" inputmode="decimal" value="<%= values.weight_lbs %>">
+      </div>
+    </div>
+  </fieldset>
+
   <div class="banner">
-    Your conditions are encrypted at rest, never printed on a receipt, and stripped from analytics.
+    Your health information is private. It's encrypted, never printed on a receipt, and never shared with your name attached.
   </div>
 
-  <button type="submit" class="btn btn--primary btn--lg">Create MTG profile</button>
+  <button type="submit" class="btn btn--primary btn--lg">Create my card</button>
 </form>
 
 <%- include('partials/foot') %>

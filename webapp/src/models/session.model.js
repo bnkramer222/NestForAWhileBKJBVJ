@@ -76,6 +76,18 @@ export async function getQueuedPosition(clientId) {
   return rows[0]?.ahead ?? 0;
 }
 
+/** Live place in line (1 = next in), recomputed every refresh so it shrinks as others are admitted. */
+export async function getLivePosition(token) {
+  const { rows } = await db.query(
+    `SELECT COUNT(*)::int AS position
+       FROM shopping_sessions q
+      WHERE q.status = 'queue_waiting'
+        AND q.started_at <= (SELECT started_at FROM shopping_sessions WHERE session_token = $1)`,
+    [token],
+  );
+  return rows[0]?.position ?? 0;
+}
+
 export async function getSessionSummary(sessionId) {
   const { rows } = await db.query(
     `SELECT s.id, s.session_token, s.status, s.dietary_tier_id, s.started_at,
@@ -111,6 +123,27 @@ export async function addCartItem({ sessionId, sku, quantity = 1, evaluatedStatu
     [sessionId, sku, quantity, evaluatedStatus],
   );
   return rows[0];
+}
+
+/** Set an exact quantity (the shopper's +/- buttons). Re-evaluated status is stored with it. */
+export async function setCartQuantity({ sessionId, sku, quantity, evaluatedStatus }) {
+  const { rows } = await db.query(
+    `INSERT INTO cart_items (session_id, sku, quantity, evaluated_status)
+     VALUES ($1, $2, $3, $4)
+     ON CONFLICT (session_id, sku)
+     DO UPDATE SET quantity = EXCLUDED.quantity, evaluated_status = EXCLUDED.evaluated_status
+     RETURNING sku, quantity, evaluated_status`,
+    [sessionId, sku, quantity, evaluatedStatus],
+  );
+  return rows[0];
+}
+
+export async function getCartQuantity(sessionId, sku) {
+  const { rows } = await db.query('SELECT quantity FROM cart_items WHERE session_id = $1 AND sku = $2', [
+    sessionId,
+    sku,
+  ]);
+  return rows[0]?.quantity ?? 0;
 }
 
 export async function removeCartItem(sessionId, sku) {
@@ -237,8 +270,54 @@ export async function abandonSession(sessionId) {
     `UPDATE shopping_sessions SET status = 'abandoned', ended_at = now() WHERE id = $1 AND status = 'active'`,
     [sessionId],
   );
-  if (rowCount) await releaseFloorSlot();
+  if (rowCount) {
+    await releaseFloorSlot();
+    await admitFromQueue();
+  }
   return rowCount > 0;
+}
+
+/** Leaving the line from the queue page: no floor slot was held, so none is released. */
+export async function leaveQueue(token) {
+  const { rowCount } = await db.query(
+    `UPDATE shopping_sessions SET status = 'abandoned', ended_at = now()
+      WHERE session_token = $1 AND status = 'queue_waiting'`,
+    [token],
+  );
+  return rowCount > 0;
+}
+
+/** Most recent open (active or queued) session for a client, so re-check-ins don't duplicate. */
+export async function findOpenSessionForClient(clientId) {
+  const { rows } = await db.query(
+    `SELECT id, session_token, status, queue_position, client_id
+       FROM shopping_sessions
+      WHERE client_id = $1 AND status IN ('active', 'queue_waiting')
+      ORDER BY started_at DESC
+      LIMIT 1`,
+    [clientId],
+  );
+  return rows[0] || null;
+}
+
+/**
+ * Fill free floor slots from the waiting queue (FIFO). Each promotion claims a slot first,
+ * so Active_Floor_Shoppers never exceeds Max_Floor_Capacity. Called after every checkout
+ * or abandoned session — no volunteer intervention needed.
+ */
+export async function admitFromQueue() {
+  const admitted = [];
+  for (;;) {
+    const slot = await claimFloorSlot();
+    if (!slot) break;
+    const promoted = await promoteNextFromQueue();
+    if (!promoted) {
+      await releaseFloorSlot();
+      break;
+    }
+    admitted.push(promoted);
+  }
+  return admitted;
 }
 
 export async function promoteNextFromQueue() {
@@ -248,8 +327,9 @@ export async function promoteNextFromQueue() {
       WHERE id = (
         SELECT id FROM shopping_sessions
          WHERE status = 'queue_waiting'
-         ORDER BY queue_position NULLS LAST, started_at
+         ORDER BY started_at
          LIMIT 1
+         FOR UPDATE SKIP LOCKED
       )
       RETURNING id, session_token`,
   );

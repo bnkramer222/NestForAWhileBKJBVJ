@@ -50,70 +50,237 @@
     });
   }
 
+  /*
+   * Camera scanner shared by the shopping companion and the exit terminal.
+   * Uses html5-qrcode (open source, self-hosted): native BarcodeDetector where the browser has it,
+   * ZXing decoding everywhere else (iPhone Safari, Firefox). Reads product barcodes and QR codes.
+   * Cameras need HTTPS (or localhost).
+   */
+  function attachScanner(buttonId, containerId, onCode, onError) {
+    const button = document.getElementById(buttonId);
+    const container = document.getElementById(containerId);
+    if (!button || !container) return;
+    const idleLabel = button.textContent;
+    if (!window.Html5Qrcode || !navigator.mediaDevices || !window.isSecureContext) {
+      button.hidden = true; // no camera support here — typing the code still works
+      return;
+    }
+    const F = window.Html5QrcodeSupportedFormats;
+    let scanner = null;
+
+    async function stop() {
+      if (!scanner) return;
+      const active = scanner;
+      scanner = null;
+      try { await active.stop(); } catch (_) { /* already stopped */ }
+      try { active.clear(); } catch (_) { /* nothing rendered */ }
+      container.hidden = true;
+      button.textContent = idleLabel;
+    }
+
+    button.addEventListener('click', async function () {
+      if (scanner) return stop();
+      container.hidden = false;
+      button.textContent = 'Stop camera';
+      scanner = new window.Html5Qrcode(containerId, {
+        formatsToSupport: [F.QR_CODE, F.EAN_13, F.EAN_8, F.UPC_A, F.UPC_E, F.CODE_128, F.CODE_39],
+        experimentalFeatures: { useBarCodeDetectorIfSupported: true },
+        verbose: false,
+      });
+      try {
+        await scanner.start(
+          { facingMode: 'environment' },
+          { fps: 10, qrbox: function (w, h) { const s = Math.floor(Math.min(w, h) * 0.8); return { width: s, height: Math.floor(s * 0.6) }; } },
+          function (decoded) {
+            const code = String(decoded || '').trim();
+            if (!code) return;
+            stop().then(function () { onCode(code); });
+          },
+          function () { /* no code in this frame — keep scanning */ },
+        );
+      } catch (err) {
+        await stop();
+        onError('Camera unavailable: ' + ((err && err.message) || err) + '. You can type the code instead.');
+      }
+    });
+  }
+
+  /* ---------------- kiosk: scan the client card QR to check in ---------------- */
+  attachScanner('kiosk-camera-btn', 'kiosk-camera', function (code) {
+    const input = document.getElementById('token');
+    const form = input && input.form;
+    if (!form) return;
+    input.value = code;
+    form.submit();
+  }, function (message) { alert(message); });
+
+  /* Print button on the demo barcode sheet (no inline handlers: CSP blocks them). */
+  document.querySelectorAll('.js-print').forEach(function (button) {
+    button.addEventListener('click', function () { window.print(); });
+  });
+
   /* ---------------- shopping companion ---------------- */
   const shop = document.getElementById('shop-app');
   if (shop) {
-    const token = shop.dataset.token;
+    const COPY = JSON.parse(shop.dataset.statusCopy || '{}');
     const scanForm = document.getElementById('scan-form');
     const scanResult = document.getElementById('scan-result');
     const cartList = document.getElementById('cart-list');
+    const cartCount = document.getElementById('cart-count');
+    const cartNotice = document.getElementById('cart-notice');
     const recipesBtn = document.getElementById('recipes-btn');
     const recipesPanel = document.getElementById('recipes-panel');
     const recipesList = document.getElementById('recipes-list');
     const missingList = document.getElementById('missing-list');
     const recipesSource = document.getElementById('recipes-source');
+    const sheet = document.getElementById('confirm-sheet');
+    let cart = JSON.parse(shop.dataset.cart || '[]');
 
-    function renderScan(item) {
+    const label = function (status) { return (COPY[status] && COPY[status].label) || status; };
+
+    function showNotice(text) {
+      cartNotice.hidden = !text;
+      cartNotice.textContent = text || '';
+    }
+
+    function qtyOf(sku) {
+      const line = cart.find(function (item) { return item.sku === sku; });
+      return line ? line.quantity : 0;
+    }
+
+    function renderShopCart() {
+      cartList.innerHTML = '';
+      const units = cart.reduce(function (sum, item) { return sum + item.quantity; }, 0);
+      cartCount.textContent = units + (units === 1 ? ' item' : ' items');
+      if (!cart.length) {
+        cartList.appendChild(el('li', 'muted', 'Your cart is empty. Scan or add items as you go.'));
+        return;
+      }
+      cart.forEach(function (item) {
+        const li = el('li', 'cart-line');
+        li.dataset.sku = item.sku;
+        const top = el('div', 'cart-top');
+        top.appendChild(el('span', 'badge badge--' + item.status, label(item.status)));
+        top.appendChild(el('span', 'cart-name', item.name));
+        const qty = el('div', 'qty');
+        const dec = el('button', 'qty-btn js-dec', '−');
+        dec.type = 'button';
+        dec.setAttribute('aria-label', 'One less ' + item.name);
+        const inc = el('button', 'qty-btn js-inc', '+');
+        inc.type = 'button';
+        inc.setAttribute('aria-label', 'One more ' + item.name);
+        if (item.quantity >= item.onHand) inc.disabled = true;
+        qty.appendChild(dec);
+        qty.appendChild(el('span', 'qty-n', String(item.quantity)));
+        qty.appendChild(inc);
+        top.appendChild(qty);
+        const remove = el('button', 'link-btn js-remove', 'remove');
+        remove.type = 'button';
+        top.appendChild(remove);
+        li.appendChild(top);
+        if (item.status === 'restricted') {
+          li.appendChild(el('p', 'cart-warn', 'A volunteer will check this one with you at the exit.'));
+        } else if (item.overCap) {
+          li.appendChild(el('p', 'cart-warn', 'We suggest about ' + item.capServings + ' serving' + (item.capServings === 1 ? '' : 's') + ' of this — your choice.'));
+        }
+        cartList.appendChild(li);
+      });
+    }
+
+    /* Restricted items: a calm confirmation instead of a hard "no". Resolves true/false. */
+    function askConfirm(item) {
+      return new Promise(function (resolve) {
+        document.getElementById('confirm-name').textContent = item.name;
+        const reasons = document.getElementById('confirm-reasons');
+        reasons.innerHTML = '';
+        (item.reasons || []).forEach(function (reason) { reasons.appendChild(el('li', null, reason)); });
+        sheet.hidden = false;
+        const yes = document.getElementById('confirm-yes');
+        const no = document.getElementById('confirm-no');
+        no.focus();
+        function done(answer) {
+          sheet.hidden = true;
+          yes.removeEventListener('click', onYes);
+          no.removeEventListener('click', onNo);
+          resolve(answer);
+        }
+        function onYes() { done(true); }
+        function onNo() { done(false); }
+        yes.addEventListener('click', onYes);
+        no.addEventListener('click', onNo);
+      });
+    }
+
+    /* One path for every cart change: add, +, −. Handles the restricted-item confirmation. */
+    async function changeCart(sku, method, body) {
+      const url = method === 'POST' ? '/api/cart' : '/api/cart/' + encodeURIComponent(sku);
+      const payload = Object.assign({ sku: sku }, body || {});
+      try {
+        const data = await request(url, { method: method, body: JSON.stringify(payload) });
+        cart = data.cart;
+        renderShopCart();
+        showNotice(data.notice);
+        return true;
+      } catch (err) {
+        if (err.details && err.details.code === 'CONFIRM_RESTRICTED') {
+          const ok = await askConfirm(err.details.item);
+          if (!ok) { showNotice('No problem — left on the shelf.'); return false; }
+          return changeCart(sku, method, Object.assign({}, body, { confirm: true }));
+        }
+        showNotice(err.message);
+        return false;
+      }
+    }
+
+    function addOne(sku, button) {
+      if (button) button.disabled = true;
+      return changeCart(sku, 'POST', { quantity: 1 }).then(function (ok) {
+        if (button) {
+          button.disabled = false;
+          if (ok) {
+            button.textContent = 'In cart (' + qtyOf(sku) + ') · add one more';
+          }
+        }
+        return ok;
+      });
+    }
+
+    function renderScan(item, inCart) {
       scanResult.hidden = false;
       scanResult.innerHTML = '';
+      const copy = COPY[item.status] || {};
       const card = el('div', 'result-card status-' + item.status);
       const head = el('div', 'rec-head');
-      head.appendChild(el('span', 'badge badge--' + item.status, item.status));
-      head.appendChild(el('span', 'pill', 'SKU ' + item.sku));
+      head.appendChild(el('span', 'badge badge--' + item.status, label(item.status)));
+      head.appendChild(el('span', 'pill', '#' + item.sku));
       card.appendChild(head);
       card.appendChild(el('h3', null, item.name));
-      card.appendChild(el('p', 'muted small', 'Aisle ' + item.aisle + ' · Shelf ' + item.shelf + ' · Bin ' + item.bin + ' · ' + item.onHand + ' on hand'));
-
+      card.appendChild(el('p', 'small', copy.headline ? copy.headline + '. ' + (copy.detail || '') : ''));
+      card.appendChild(el('p', 'muted small', 'Aisle ' + item.aisle + ' · Shelf ' + item.shelf + ' · Bin ' + item.bin + ' · ' + item.onHand + ' on the shelf'));
       if (item.reasons.length) {
+        const why = el('details', 'why');
+        why.appendChild(el('summary', null, 'Why?'));
         const ul = el('ul');
         item.reasons.forEach(function (reason) { ul.appendChild(el('li', null, reason)); });
-        card.appendChild(ul);
-      } else {
-        card.appendChild(el('p', 'small', 'No clinical conflicts detected for your profile.'));
+        why.appendChild(ul);
+        card.appendChild(why);
       }
-
-      if (item.status === 'restricted') {
-        card.appendChild(el('p', 'small', 'Please leave this item on the shelf. A volunteer can suggest a swap.'));
-      } else {
-        const add = el('button', 'btn btn--primary btn--sm', item.status === 'capped' ? 'Add one serving' : 'Add to cart');
-        add.type = 'button';
-        add.addEventListener('click', function () {
-          add.disabled = true;
-          request('/api/cart', { method: 'POST', body: JSON.stringify({ sku: item.sku }) })
-            .then(function (data) { renderCart(cartList, data.cart, remove); add.textContent = 'Added'; })
-            .catch(function (err) { add.disabled = false; add.textContent = err.message; });
-        });
-        card.appendChild(add);
-      }
-
+      const add = el('button', 'btn btn--primary btn--sm', inCart ? 'In cart (' + inCart + ') · add one more' : (item.status === 'restricted' ? 'Add anyway' : 'Add to cart'));
+      add.type = 'button';
+      add.addEventListener('click', function () { addOne(item.sku, add); });
+      card.appendChild(add);
       scanResult.appendChild(card);
     }
 
-    async function scan(sku) {
+    async function scan(code) {
       try {
-        const data = await request('/api/scan', { method: 'POST', body: JSON.stringify({ sku: sku }) });
-        renderScan(data.item);
+        const data = await request('/api/scan', { method: 'POST', body: JSON.stringify({ sku: code }) });
+        renderScan(data.item, data.quantityInCart);
       } catch (err) {
         scanResult.hidden = false;
         scanResult.innerHTML = '';
         scanResult.appendChild(el('div', 'banner banner--error', err.message));
       }
-    }
-
-    function remove(sku) {
-      request('/api/cart/' + encodeURIComponent(sku), { method: 'DELETE' })
-        .then(function (data) { renderCart(cartList, data.cart, remove); })
-        .catch(function (err) { alert(err.message); });
     }
 
     scanForm.addEventListener('submit', function (event) {
@@ -125,32 +292,45 @@
     });
 
     cartList.addEventListener('click', function (event) {
-      const button = event.target.closest('.js-remove');
-      if (button) remove(button.dataset.sku);
+      const line = event.target.closest('.cart-line');
+      if (!line) return;
+      const sku = line.dataset.sku;
+      if (event.target.closest('.js-inc')) changeCart(sku, 'PATCH', { quantity: qtyOf(sku) + 1 });
+      else if (event.target.closest('.js-dec')) changeCart(sku, 'PATCH', { quantity: qtyOf(sku) - 1 });
+      else if (event.target.closest('.js-remove')) changeCart(sku, 'PATCH', { quantity: 0 });
     });
 
     document.querySelectorAll('.js-add').forEach(function (button) {
-      button.addEventListener('click', function () {
-        button.disabled = true;
-        request('/api/cart', { method: 'POST', body: JSON.stringify({ sku: button.dataset.sku }) })
-          .then(function (data) {
-            renderCart(cartList, data.cart, remove);
-            button.textContent = 'Added';
-          })
-          .catch(function (err) {
-            button.disabled = false;
-            button.textContent = err.message;
-          });
-      });
+      button.addEventListener('click', function () { addOne(button.dataset.sku, button); });
     });
+
+    /* Search across "Everything on the floor today" */
+    const search = document.getElementById('browse-search');
+    if (search) {
+      search.addEventListener('input', function () {
+        const q = search.value.trim().toLowerCase();
+        let shown = 0;
+        document.querySelectorAll('.browse-item').forEach(function (row) {
+          const match = !q || row.dataset.name.indexOf(q) !== -1;
+          row.hidden = !match;
+          if (match) shown += 1;
+        });
+        document.querySelectorAll('.browse-group').forEach(function (group) {
+          const any = group.querySelector('.browse-item:not([hidden])');
+          group.hidden = !any;
+          if (q && any) group.open = true;
+        });
+        document.getElementById('browse-empty').hidden = shown > 0;
+      });
+    }
 
     recipesBtn.addEventListener('click', function () {
       recipesBtn.disabled = true;
-      recipesBtn.textContent = 'Thinking…';
+      recipesBtn.textContent = 'Thinking up some meals…';
       request('/api/recipes')
         .then(function (data) {
           recipesPanel.hidden = false;
-          recipesSource.textContent = data.source + (data.latencyMs ? ' · ' + data.latencyMs + ' ms' : '');
+          recipesSource.textContent = data.source === 'open-source-engine' ? 'AI suggestions' : 'Kitchen-tested ideas';
           recipesList.innerHTML = '';
           (data.recipes || []).forEach(function (recipe) {
             const card = el('article', 'recipe');
@@ -162,17 +342,21 @@
             recipesList.appendChild(card);
           });
           if (!(data.recipes || []).length) {
-            recipesList.appendChild(el('p', 'muted', 'Add a few items first — we need at least a protein and a vegetable.'));
+            recipesList.appendChild(el('p', 'muted', 'Add a few more items — a protein and a vegetable are a great start.'));
           }
           missingList.innerHTML = '';
           (data.missingIngredients || []).forEach(function (item) {
-            missingList.appendChild(
-              el('li', null, item.name + ' — aisle ' + item.aisle + ', shelf ' + item.shelf + ', bin ' + item.bin + ' (' + item.onHand + ' on hand)'),
-            );
+            const li = el('li', null, item.name + ' — aisle ' + item.aisle + ', shelf ' + item.shelf + ', bin ' + item.bin + ' ');
+            const add = el('button', 'link-btn', 'add');
+            add.type = 'button';
+            add.addEventListener('click', function () { addOne(item.sku, add); });
+            li.appendChild(add);
+            missingList.appendChild(li);
           });
           if (!(data.missingIngredients || []).length) {
-            missingList.appendChild(el('li', 'muted', 'You already have everything for these recipes.'));
+            missingList.appendChild(el('li', 'muted', 'You already have everything for these meals.'));
           }
+          recipesPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
         })
         .catch(function (err) {
           recipesPanel.hidden = false;
@@ -181,56 +365,28 @@
         })
         .finally(function () {
           recipesBtn.disabled = false;
-          recipesBtn.textContent = 'Suggest recipes from my cart';
+          recipesBtn.textContent = 'Get meal ideas from my cart';
         });
     });
 
-    /* Optional camera scan — BarcodeDetector is a browser API, no external service. */
-    const cameraBtn = document.getElementById('camera-btn');
-    const video = document.getElementById('camera-preview');
-    if (cameraBtn && video) {
-      if (!('BarcodeDetector' in window)) {
-        cameraBtn.hidden = true;
-      } else {
-        let stream = null;
-        cameraBtn.addEventListener('click', async function () {
-          if (stream) {
-            stream.getTracks().forEach(function (track) { track.stop(); });
-            stream = null;
-            video.hidden = true;
-            return;
-          }
-          try {
-            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-            video.srcObject = stream;
-            video.hidden = false;
-            await video.play();
-            const detector = new window.BarcodeDetector({ formats: ['ean_13', 'upc_a', 'code_128'] });
-            const tick = async function () {
-              if (!stream) return;
-              const codes = await detector.detect(video);
-              if (codes.length) {
-                document.getElementById('sku').value = codes[0].rawValue;
-                scan(codes[0].rawValue);
-                stream.getTracks().forEach(function (track) { track.stop(); });
-                stream = null;
-                video.hidden = true;
-                return;
-              }
-              requestAnimationFrame(tick);
-            };
-            requestAnimationFrame(tick);
-          } catch (err) {
-            scanResult.hidden = false;
-            scanResult.innerHTML = '';
-            scanResult.appendChild(el('div', 'banner banner--error', 'Camera unavailable: ' + err.message));
-          }
-        });
-      }
-    }
+    /* Camera scan (barcodes + QR) — works on iPhone/Safari via the self-hosted html5-qrcode library. */
+    attachScanner('camera-btn', 'camera-preview', function (code) {
+      document.getElementById('sku').value = code;
+      scan(code);
+    }, function (message) {
+      scanResult.hidden = false;
+      scanResult.innerHTML = '';
+      scanResult.appendChild(el('div', 'banner banner--error', message));
+    });
+
+    renderShopCart();
   }
 
   /* ---------------- volunteer exit terminal ---------------- */
+  attachScanner('token-camera-btn', 'token-camera', function (code) {
+    window.location.href = '/checkout?token=' + encodeURIComponent(code);
+  }, function (message) { alert(message); });
+
   const checkout = document.getElementById('checkout-app');
   if (checkout) {
     const token = checkout.dataset.token;
@@ -268,6 +424,19 @@
       if (button) remove(button.dataset.sku);
     });
 
+    function addScanned(sku) {
+      request('/api/checkout/items', { method: 'POST', body: JSON.stringify({ token: token, sku: sku }) })
+        .then(function (data) {
+          renderCart(cartList, data.cart, remove);
+          hint.textContent = data.item.name + ' — ' + data.item.status;
+          hint.className = 'small';
+        })
+        .catch(function (err) {
+          hint.textContent = err.message;
+          hint.className = 'banner banner--error';
+        });
+    }
+
     if (scanForm) {
       scanForm.addEventListener('submit', function (event) {
         event.preventDefault();
@@ -275,16 +444,11 @@
         const sku = input.value.trim();
         if (!sku) return;
         input.value = '';
-        request('/api/checkout/items', { method: 'POST', body: JSON.stringify({ token: token, sku: sku }) })
-          .then(function (data) {
-            renderCart(cartList, data.cart, remove);
-            hint.textContent = data.item.name + ' — ' + data.item.status;
-            hint.className = 'small';
-          })
-          .catch(function (err) {
-            hint.textContent = err.message;
-            hint.className = 'banner banner--error';
-          });
+        addScanned(sku);
+      });
+      attachScanner('checkout-camera-btn', 'checkout-camera', addScanned, function (message) {
+        hint.textContent = message;
+        hint.className = 'banner banner--error';
       });
     }
 
@@ -304,7 +468,13 @@
               list.appendChild(el('li', null, line.quantity + ' × ' + line.name + ' (' + line.evaluated_status + ')'));
             });
             receipt.appendChild(list);
+            if (data.admittedFromQueue) {
+              receipt.appendChild(el('p', 'small', data.admittedFromQueue + ' household(s) admitted from the waiting line.'));
+            }
+            completeBtn.textContent = 'Checkout complete';
             completeBtn.hidden = true;
+            const checkoutCamera = document.getElementById('checkout-camera-btn');
+            if (checkoutCamera) checkoutCamera.hidden = true;
             if (scanForm) scanForm.hidden = true;
           })
           .catch(function (err) {

@@ -1,6 +1,6 @@
 # Epic Cure — Medically Tailored Groceries (MTG)
 
-A warehouse checkout and shopping companion for **Epic Cure** (St. Augustine, FL), built for the
+A warehouse checkout and shopping companion for **Epic Cure**, built for the
 2026 NestforAwhile AI-Augmented Software Engineer Challenge, Problem Case: *Food is Medicine*.
 
 Clients check in at a kiosk with a token (no ID, no paperwork), shop the farmers-market floor with a
