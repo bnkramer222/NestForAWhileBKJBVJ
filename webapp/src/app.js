@@ -11,6 +11,7 @@ import { env } from './config/env.js';
 import { brand } from './config/brand.js';
 import { db, pool } from './config/db.js';
 import routes from './routes/index.js';
+import { i18nMiddleware, translator } from './i18n/index.js';
 import { notFoundHandler, errorHandler } from './middleware/error.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -21,6 +22,10 @@ export function createApp() {
 
   app.set('view engine', 'ejs');
   app.locals.brand = brand; // available to every view, including error pages
+  // English defaults so even errors raised before the language middleware can render.
+  app.locals.t = translator('en');
+  app.locals.lang = 'en';
+  app.locals.clientStrings = '{}';
   app.set('views', path.join(__dirname, 'views'));
   app.set('trust proxy', 1);
   app.disable('x-powered-by');
@@ -71,6 +76,8 @@ export function createApp() {
       },
     }),
   );
+
+  app.use(i18nMiddleware);
 
   app.use((req, res, next) => {
     res.locals.dbEnabled = db.enabled;

@@ -18,6 +18,10 @@ CREATE TABLE IF NOT EXISTS clients (
   updated_at            timestamptz NOT NULL DEFAULT now()
 );
 
+-- What the client likes to be called (encrypted like the legal name) and their language.
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS preferred_name_enc bytea;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS preferred_lang text;
+
 CREATE TABLE IF NOT EXISTS condition_catalog (
   code          text PRIMARY KEY,                    -- ICD-10
   name          text NOT NULL,

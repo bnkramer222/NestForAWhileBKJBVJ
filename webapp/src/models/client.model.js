@@ -6,6 +6,8 @@ const COLUMNS = `
   c.id,
   c.client_token_hash,
   c.full_name_enc,
+  c.preferred_name_enc,
+  c.preferred_lang,
   c.household_size,
   c.enrollment_status,
   c.enrollment_expires_on,
@@ -16,9 +18,15 @@ const COLUMNS = `
 
 function toProfile(row) {
   if (!row) return null;
+  const name = decrypt(row.full_name_enc);
+  const preferredName = row.preferred_name_enc ? decrypt(row.preferred_name_enc) : null;
   return {
     id: row.id,
-    name: decrypt(row.full_name_enc),
+    name,
+    preferredName,
+    // What we call them in greetings: their chosen name, else their first name.
+    greetingName: preferredName || String(name || '').split(' ')[0] || '',
+    preferredLang: row.preferred_lang || null,
     householdSize: row.household_size,
     enrollmentStatus: row.enrollment_status,
     enrollmentExpiresOn: row.enrollment_expires_on,
@@ -71,6 +79,8 @@ function newToken() {
  */
 export async function createEnrollment({
   name,
+  preferredName = null,
+  preferredLang = null,
   householdSize,
   conditions = [],
   allergies = [],
@@ -81,10 +91,10 @@ export async function createEnrollment({
     try {
       const id = await db.tx(async (client) => {
         const inserted = await client.query(
-          `INSERT INTO clients (client_token_hash, full_name_enc, household_size, enrollment_status, enrollment_expires_on, dietary_tier_id)
-           VALUES ($1, $2, $3, 'active', now() + interval '12 months', $4)
+          `INSERT INTO clients (client_token_hash, full_name_enc, preferred_name_enc, preferred_lang, household_size, enrollment_status, enrollment_expires_on, dietary_tier_id)
+           VALUES ($1, $2, $3, $4, $5, 'active', now() + interval '12 months', $6)
            RETURNING id`,
-          [hashToken(token), encrypt(name), householdSize, dietaryTierId],
+          [hashToken(token), encrypt(name), preferredName ? encrypt(preferredName) : null, preferredLang, householdSize, dietaryTierId],
         );
         const clientId = inserted.rows[0].id;
 

@@ -2,6 +2,16 @@
 (function () {
   'use strict';
 
+  /* Translated strings for the shopper's language (rendered by the server into <body data-i18n>). */
+  let STRINGS = {};
+  try { STRINGS = JSON.parse(document.body.dataset.i18n || '{}'); } catch (_) { STRINGS = {}; }
+  function tr(key, vars) {
+    const template = STRINGS[key] || key;
+    return template.replace(/\{(\w+)\}/g, function (_, name) {
+      return vars && vars[name] !== undefined ? String(vars[name]) : '{' + name + '}';
+    });
+  }
+
   async function request(url, options) {
     const response = await fetch(url, {
       headers: { 'content-type': 'application/json' },
@@ -81,7 +91,7 @@
     button.addEventListener('click', async function () {
       if (scanner) return stop();
       container.hidden = false;
-      button.textContent = 'Stop camera';
+      button.textContent = tr('stopCamera');
       scanner = new window.Html5Qrcode(containerId, {
         formatsToSupport: [F.QR_CODE, F.EAN_13, F.EAN_8, F.UPC_A, F.UPC_E, F.CODE_128, F.CODE_39],
         experimentalFeatures: { useBarCodeDetectorIfSupported: true },
@@ -100,7 +110,7 @@
         );
       } catch (err) {
         await stop();
-        onError('Camera unavailable: ' + ((err && err.message) || err) + '. You can type the code instead.');
+        onError(tr('cameraErr', { error: (err && err.message) || err }));
       }
     });
   }
@@ -134,20 +144,20 @@
           statusEl.hidden = true;
           if (data.status === 'active') {
             statusEl.hidden = false;
-            statusEl.textContent = "It's your turn! Taking you to your shopping list…";
+            statusEl.textContent = tr('yourTurn');
             window.location.href = '/queue?token=' + encodeURIComponent(qToken);
             return;
           }
           if (data.status !== 'queue_waiting') { window.location.href = '/queue?token=' + encodeURIComponent(qToken); return; }
           posEl.textContent = data.position;
           const ahead = Math.max(data.position - 1, 0);
-          aheadEl.textContent = ahead === 0 ? "You're next!" : ahead + (ahead === 1 ? ' household' : ' households') + ' ahead of you';
+          aheadEl.textContent = ahead === 0 ? tr('next') : (ahead === 1 ? tr('ahead.one') : tr('ahead.many', { n: ahead }));
           setTimeout(poll, 5000);
         })
         .catch(function () {
           failures += 1;
           statusEl.hidden = false;
-          statusEl.textContent = 'Weak signal — still holding your place. Retrying…';
+          statusEl.textContent = tr('weakSignal');
           setTimeout(poll, Math.min(30000, 5000 * failures)); // back off on bad warehouse Wi-Fi
         });
     };
@@ -186,9 +196,9 @@
     function renderShopCart() {
       cartList.innerHTML = '';
       const units = cart.reduce(function (sum, item) { return sum + item.quantity; }, 0);
-      cartCount.textContent = units + (units === 1 ? ' item' : ' items');
+      cartCount.textContent = units === 1 ? tr('items.one') : tr('items.many', { n: units });
       if (!cart.length) {
-        cartList.appendChild(el('li', 'muted', 'Your cart is empty. Scan or add items as you go.'));
+        cartList.appendChild(el('li', 'muted', tr('cartEmpty')));
         return;
       }
       cart.forEach(function (item) {
@@ -196,27 +206,29 @@
         li.dataset.sku = item.sku;
         const top = el('div', 'cart-top');
         top.appendChild(el('span', 'badge badge--' + item.status, label(item.status)));
-        top.appendChild(el('span', 'cart-name', item.name));
+        const nameEl = el('span', 'cart-name', item.name);
+        nameEl.lang = 'en';
+        top.appendChild(nameEl);
         const qty = el('div', 'qty');
         const dec = el('button', 'qty-btn js-dec', '−');
         dec.type = 'button';
-        dec.setAttribute('aria-label', 'One less ' + item.name);
+        dec.setAttribute('aria-label', tr('oneLess') + ': ' + item.name);
         const inc = el('button', 'qty-btn js-inc', '+');
         inc.type = 'button';
-        inc.setAttribute('aria-label', 'One more ' + item.name);
+        inc.setAttribute('aria-label', tr('oneMore') + ': ' + item.name);
         if (item.quantity >= item.onHand) inc.disabled = true;
         qty.appendChild(dec);
         qty.appendChild(el('span', 'qty-n', String(item.quantity)));
         qty.appendChild(inc);
         top.appendChild(qty);
-        const remove = el('button', 'link-btn js-remove', 'remove');
+        const remove = el('button', 'link-btn js-remove', tr('remove'));
         remove.type = 'button';
         top.appendChild(remove);
         li.appendChild(top);
         if (item.status === 'restricted') {
-          li.appendChild(el('p', 'cart-warn', 'A volunteer will check this one with you at the exit.'));
+          li.appendChild(el('p', 'cart-warn', tr('warnRestricted')));
         } else if (item.overCap) {
-          li.appendChild(el('p', 'cart-warn', 'We suggest about ' + item.capServings + ' serving' + (item.capServings === 1 ? '' : 's') + ' of this — your choice.'));
+          li.appendChild(el('p', 'cart-warn', tr('warnCap', { n: item.capServings })));
         }
         cartList.appendChild(li);
       });
@@ -259,7 +271,7 @@
       } catch (err) {
         if (err.details && err.details.code === 'CONFIRM_RESTRICTED') {
           const ok = await askConfirm(err.details.item);
-          if (!ok) { showNotice('No problem — left on the shelf.'); return false; }
+          if (!ok) { showNotice(tr('leftIt')); return false; }
           return changeCart(sku, method, Object.assign({}, body, { confirm: true }));
         }
         showNotice(err.message);
@@ -273,7 +285,7 @@
         if (button) {
           button.disabled = false;
           if (ok) {
-            button.textContent = 'In cart (' + qtyOf(sku) + ') · add one more';
+            button.textContent = tr('inCart', { n: qtyOf(sku) });
           }
         }
         return ok;
@@ -289,18 +301,20 @@
       head.appendChild(el('span', 'badge badge--' + item.status, label(item.status)));
       head.appendChild(el('span', 'pill', '#' + item.sku));
       card.appendChild(head);
-      card.appendChild(el('h3', null, item.name));
+      const title = el('h3', null, item.name);
+      title.lang = 'en';
+      card.appendChild(title);
       card.appendChild(el('p', 'small', copy.headline ? copy.headline + '. ' + (copy.detail || '') : ''));
-      card.appendChild(el('p', 'muted small', 'Aisle ' + item.aisle + ' · Shelf ' + item.shelf + ' · Bin ' + item.bin + ' · ' + item.onHand + ' on the shelf'));
+      card.appendChild(el('p', 'muted small', tr('onShelf', { aisle: item.aisle, shelf: item.shelf, bin: item.bin, n: item.onHand })));
       if (item.reasons.length) {
         const why = el('details', 'why');
-        why.appendChild(el('summary', null, 'Why?'));
+        why.appendChild(el('summary', null, tr('why')));
         const ul = el('ul');
         item.reasons.forEach(function (reason) { ul.appendChild(el('li', null, reason)); });
         why.appendChild(ul);
         card.appendChild(why);
       }
-      const add = el('button', 'btn btn--primary btn--sm', inCart ? 'In cart (' + inCart + ') · add one more' : (item.status === 'restricted' ? 'Add anyway' : 'Add to cart'));
+      const add = el('button', 'btn btn--primary btn--sm', inCart ? tr('inCart', { n: inCart }) : (item.status === 'restricted' ? tr('addAnyway') : tr('addToCart')));
       add.type = 'button';
       add.addEventListener('click', function () { addOne(item.sku, add); });
       card.appendChild(add);
@@ -361,11 +375,11 @@
 
     recipesBtn.addEventListener('click', function () {
       recipesBtn.disabled = true;
-      recipesBtn.textContent = 'Thinking up some meals…';
+      recipesBtn.textContent = tr('thinking');
       request('/api/recipes')
         .then(function (data) {
           recipesPanel.hidden = false;
-          recipesSource.textContent = data.source === 'open-source-engine' ? 'AI suggestions' : 'Kitchen-tested ideas';
+          recipesSource.textContent = data.source === 'open-source-engine' ? tr('aiIdeas') : tr('kitchenIdeas');
           recipesList.innerHTML = '';
           (data.recipes || []).forEach(function (recipe) {
             const card = el('article', 'recipe');
@@ -377,19 +391,19 @@
             recipesList.appendChild(card);
           });
           if (!(data.recipes || []).length) {
-            recipesList.appendChild(el('p', 'muted', 'Add a few more items — a protein and a vegetable are a great start.'));
+            recipesList.appendChild(el('p', 'muted', tr('addMore')));
           }
           missingList.innerHTML = '';
           (data.missingIngredients || []).forEach(function (item) {
-            const li = el('li', null, item.name + ' — aisle ' + item.aisle + ', shelf ' + item.shelf + ', bin ' + item.bin + ' ');
-            const add = el('button', 'link-btn', 'add');
+            const li = el('li', null, tr('missingLine', { name: item.name, aisle: item.aisle, shelf: item.shelf, bin: item.bin }));
+            const add = el('button', 'link-btn', tr('add'));
             add.type = 'button';
             add.addEventListener('click', function () { addOne(item.sku, add); });
             li.appendChild(add);
             missingList.appendChild(li);
           });
           if (!(data.missingIngredients || []).length) {
-            missingList.appendChild(el('li', 'muted', 'You already have everything for these meals.'));
+            missingList.appendChild(el('li', 'muted', tr('haveAll')));
           }
           recipesPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
         })
@@ -400,7 +414,7 @@
         })
         .finally(function () {
           recipesBtn.disabled = false;
-          recipesBtn.textContent = 'Get meal ideas from my cart';
+          recipesBtn.textContent = tr('mealsBtn');
         });
     });
 

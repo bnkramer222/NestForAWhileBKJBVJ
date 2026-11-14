@@ -32,11 +32,38 @@
         </div>
         <p class="muted small">Tip for demos: set this to 1, check in two clients, and the second joins the line. Raising it admits people right away.</p>
       </form>
-      <form method="post" action="/dashboard/floor/sweep">
-        <button type="submit" class="btn btn--ghost btn--sm">Release inactive sessions now</button>
-      </form>
+      <div class="input-row">
+        <form method="post" action="/dashboard/floor/sweep">
+          <button type="submit" class="btn btn--ghost btn--sm">Release inactive sessions</button>
+        </form>
+        <form method="post" action="/dashboard/floor/clear">
+          <button type="submit" class="btn btn--ghost btn--sm">Clear the floor (end all)</button>
+        </form>
+      </div>
+      <h3>On the floor</h3>
+      <table class="table">
+        <thead><tr><th>Household</th><th>Shopping</th><th>Last active</th><th>Items</th><th></th></tr></thead>
+        <tbody>
+          <% shoppers.forEach(function (row) { %>
+            <tr>
+              <td><%= row.household_size %> people</td>
+              <td><%= row.on_floor_min %> min</td>
+              <td><%= row.idle_min === 0 ? 'just now' : row.idle_min + ' min ago' %></td>
+              <td><%= row.items %></td>
+              <td>
+                <form method="post" action="/dashboard/floor/end/<%= row.id %>">
+                  <button type="submit" class="link-btn">End</button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+          <% if (!shoppers.length) { %><tr><td colspan="5" class="muted">Nobody is shopping right now.</td></tr><% } %>
+        </tbody>
+      </table>
+      <p class="muted small">Shoppers who close the page are released automatically after 20 minutes of no activity.</p>
     </div>
     <div>
+      <h3>Waiting line</h3>
       <table class="table">
         <thead><tr><th>#</th><th>Household</th><th>Waiting</th></tr></thead>
         <tbody>

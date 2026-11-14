@@ -145,6 +145,44 @@ export async function setFloorCapacity(max) {
   });
 }
 
+/** Who is on the floor right now — no names or tokens (staff dashboard). */
+export async function listActiveShoppers() {
+  const { rows } = await db.query(
+    `SELECT s.id, c.household_size,
+            GREATEST(0, FLOOR(EXTRACT(EPOCH FROM now() - s.started_at) / 60))::int AS on_floor_min,
+            GREATEST(0, FLOOR(EXTRACT(EPOCH FROM now() - s.last_seen_at) / 60))::int AS idle_min,
+            (SELECT COALESCE(SUM(quantity), 0)::int FROM cart_items ci WHERE ci.session_id = s.id) AS items
+       FROM shopping_sessions s
+       JOIN clients c ON c.id = s.client_id
+      WHERE s.status = 'active'
+      ORDER BY s.started_at`,
+  );
+  return rows;
+}
+
+/** Staff: end one shopper's session (e.g. they left without checking out). Admits the next in line. */
+export async function endSessionByStaff(sessionId) {
+  return withFloorLock(async (client) => {
+    const { rowCount } = await client.query(
+      `UPDATE shopping_sessions SET status = 'abandoned', ended_at = now() WHERE id = $1 AND status = 'active'`,
+      [sessionId],
+    );
+    const admitted = await admitWaiting(client);
+    return { ended: rowCount, admitted: admitted.length };
+  });
+}
+
+/** Staff: clear the floor (end every active session), then admit from the line. Handy before a demo. */
+export async function clearFloor() {
+  return withFloorLock(async (client) => {
+    const { rowCount } = await client.query(
+      `UPDATE shopping_sessions SET status = 'abandoned', ended_at = now() WHERE status = 'active'`,
+    );
+    const admitted = await admitWaiting(client);
+    return { ended: rowCount, admitted: admitted.length };
+  });
+}
+
 /** Heartbeat: any page/API activity keeps the session's slot or place in line. */
 export async function touchSession(sessionId) {
   await db.query(
@@ -183,7 +221,7 @@ export async function listQueue() {
 
 export async function getSessionByToken(token) {
   const { rows } = await db.query(
-    `SELECT s.*, c.household_size, c.full_name_enc
+    `SELECT s.*, c.household_size, c.full_name_enc, c.preferred_name_enc
        FROM shopping_sessions s
        JOIN clients c ON c.id = s.client_id
       WHERE s.session_token = $1`,

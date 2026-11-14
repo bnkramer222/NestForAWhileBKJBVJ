@@ -1,7 +1,10 @@
 import bwipjs from 'bwip-js';
 import QRCode from 'qrcode';
 import * as productModel from '../models/product.model.js';
-import { CATEGORY_COPY } from '../lib/shopperCopy.js';
+import { categoryCopy } from '../lib/shopperCopy.js';
+import { translator } from '../i18n/index.js';
+
+const CATEGORY_COPY = categoryCopy(translator('en')); // staff page: English
 import { ah } from '../lib/asyncHandler.js';
 
 /** Seeded demo personas (see src/scripts/seed.js). Tokens only — no PHI on this page. */

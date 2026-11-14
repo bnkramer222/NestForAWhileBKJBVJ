@@ -1,40 +1,33 @@
 <%- include('partials/head') %>
 
 <section class="hero">
-  <p class="eyebrow">All set</p>
-  <h1>Welcome, <%= name %>!</h1>
-  <p class="lead">
-    This is your card. It's the only thing you need at the kiosk — no ID, no paperwork.
-    Take a photo of it now, because for your privacy we can't show it again.
-  </p>
+  <p class="eyebrow"><%= t('done.eyebrow') %></p>
+  <h1><%= t('done.h1', { name: name }) %></h1>
+  <p class="lead"><%= t('done.lead') %></p>
 </section>
 
 <div class="grid grid--two">
   <section class="card card--elevated">
-    <h2>Your card</h2>
-    <img src="<%= tokenQr %>" alt="QR code for your card <%= token %>" width="180" height="180" class="card-qr">
+    <h2><%= t('done.card') %></h2>
+    <img src="<%= tokenQr %>" alt="QR <%= token %>" width="180" height="180" class="card-qr">
     <p class="token"><%= token %></p>
-    <p class="muted small">Scan this QR at the kiosk, or type the code.</p>
-    <a class="btn btn--primary" href="/kiosk">Start shopping</a>
+    <p class="muted small"><%= t('done.scanHint') %></p>
+    <a class="btn btn--primary" href="/kiosk?code=<%= encodeURIComponent(token) %>"><%= t('done.start') %></a>
   </section>
 
   <section class="card">
-    <h2>Your food plan</h2>
-    <p><strong><%= tier.label %></strong></p>
-    <p class="muted small"><%= tier.notes %></p>
+    <h2><%= t('done.plan') %></h2>
+    <p><strong><%= plan.label %></strong></p>
+    <p class="muted small"><%= plan.notes %></p>
     <ul class="summary-list">
-      <li>Household size: <strong><%= householdSize %></strong></li>
-      <li>Conditions:
-        <strong><%= selectedConditions.length ? conditions.filter(function (c) { return selectedConditions.indexOf(c.code) !== -1; }).map(function (c) { return c.name; }).join('; ') : 'none selected' %></strong>
-      </li>
-      <li>Allergies: <strong><%= allergies.length ? allergies.join(', ') : 'none' %></strong></li>
+      <li><%= t('done.household') %>: <strong><%= householdSize %></strong></li>
+      <li><%= t('done.conditions') %>: <strong><%= conditionNames.length ? conditionNames.join('; ') : t('done.none') %></strong></li>
+      <li><%= t('done.allergies') %>: <strong><%= allergies.length ? allergies.join(', ') : t('done.none') %></strong></li>
     </ul>
-    <p class="muted small">
-      Your plan was set up automatically. If anything changes with your health, a volunteer can update it.
-    </p>
+    <p class="muted small"><%= t('done.auto') %></p>
   </section>
 </div>
 
-<p class="muted small"><a href="/enroll">Sign up another household</a></p>
+<p class="muted small"><a href="/enroll"><%= t('done.another') %></a></p>
 
 <%- include('partials/foot') %>

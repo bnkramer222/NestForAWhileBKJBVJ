@@ -5,8 +5,19 @@ import { buildRecommendations } from '../services/dietaryMatrix.js';
 import { evaluateItem, synthesizeRecipes } from '../services/aiEngine.js';
 import QRCode from 'qrcode';
 import { ah } from '../lib/asyncHandler.js';
-import { STATUS_COPY, CATEGORY_COPY } from '../lib/shopperCopy.js';
+import { statusCopy, categoryCopy } from '../lib/shopperCopy.js';
 import { allergenLabel } from '../lib/allergens.js';
+import { planText, localizeReasons, languageName } from '../i18n/index.js';
+
+/** Allergen name in the shopper's language (falls back to the English label). */
+const allergenName = (t) => (key) => {
+  const text = t(`allergen.${key}`);
+  return text === `allergen.${key}` ? allergenLabel(key) : text;
+};
+
+/** Evaluate an item for this shopper and translate its explanations. */
+const evaluateFor = (req, product, profile) =>
+  localizeReasons(evaluateItem({ product, profile }), req.t, allergenName(req.t));
 import { badRequest, conflict, unauthorized } from '../lib/httpError.js';
 
 async function loadContext(req) {
@@ -28,13 +39,13 @@ async function loadContext(req) {
 }
 
 /** Attach each cart line's current clinical evaluation (for friendly labels and serving hints). */
-async function enrichCart(sessionId, profile) {
+async function enrichCart(req, sessionId, profile) {
   const cart = await sessionModel.getCart(sessionId);
   const products = await productModel.findManyBySkus(cart.map((line) => line.sku));
   const bySku = new Map(products.map((product) => [product.sku, product]));
   return cart.map((line) => {
     const product = bySku.get(line.sku);
-    const evaluation = product ? evaluateItem({ product, profile }) : null;
+    const evaluation = product ? evaluateFor(req, product, profile) : null;
     const capServings = evaluation?.capServings ?? null;
     return {
       ...line,
@@ -47,17 +58,18 @@ async function enrichCart(sessionId, profile) {
   });
 }
 
-function catalogFor(inventory, profile) {
+function catalogFor(req, inventory, profile) {
+  const labels = categoryCopy(req.t);
   const groups = new Map();
   for (const product of inventory) {
-    const item = evaluateItem({ product, profile });
+    const item = evaluateFor(req, product, profile);
     const list = groups.get(product.category) || [];
     list.push({ ...item, category: product.category });
     groups.set(product.category, list);
   }
   return [...groups.entries()].map(([category, items]) => ({
     category,
-    label: CATEGORY_COPY[category] || category,
+    label: labels[category] || category,
     items,
   }));
 }
@@ -73,21 +85,22 @@ export const showShop = ah(async (req, res) => {
     allergies: ctx.client.allergies,
     householdSize: ctx.client.householdSize,
   });
-  const cart = await enrichCart(ctx.shopping.id, ctx.client);
+  const cart = await enrichCart(req, ctx.shopping.id, ctx.client);
   // Exit pass: the volunteer terminal scans this QR (or types the token) to load the cart.
   const exitQr = await QRCode.toDataURL(ctx.shopping.token, { margin: 1, width: 220 });
   res.render('shop', {
-    title: 'Shop',
+    title: req.t('shop.title'),
     bodyClass: 'shop',
     shopper: ctx.client,
-    firstName: String(ctx.client.name || '').split(' ')[0] || 'there',
-    allergyLabels: (ctx.client.allergies || []).map(allergenLabel),
+    firstName: ctx.client.greetingName,
+    allergyLabels: (ctx.client.allergies || []).map(allergenName(req.t)),
+    plan: planText(recommendations.tier, req.t),
     tier: recommendations.tier,
     needs: recommendations.needs,
     recommendations: recommendations.items,
-    catalog: catalogFor(inventory, ctx.client),
-    statusCopy: STATUS_COPY,
-    categoryCopy: CATEGORY_COPY,
+    catalog: catalogFor(req, inventory, ctx.client),
+    statusCopy: statusCopy(req.t),
+    categoryCopy: categoryCopy(req.t),
     cart,
     sessionToken: ctx.shopping.token,
     exitQr,
@@ -96,32 +109,32 @@ export const showShop = ah(async (req, res) => {
 
 export const scanItem = ah(async (req, res) => {
   const ctx = await loadContext(req);
-  if (!ctx) throw unauthorized('Your shopping session has ended. Please check in again at the kiosk.');
+  if (!ctx) throw unauthorized(req.t('msg.sessionEnded'));
 
   const sku = String(req.body.sku || '').trim().toUpperCase();
-  if (!sku) throw badRequest('Type the number under the barcode, or scan it with the camera.');
+  if (!sku) throw badRequest(req.t('msg.enterNumber'));
 
   const product = await productModel.findBySku(sku);
-  if (!product) throw badRequest(`We couldn't find item ${sku}. Try typing the number under the barcode, or ask a volunteer.`);
+  if (!product) throw badRequest(req.t('msg.notFound', { sku }));
 
-  const item = evaluateItem({ product, profile: ctx.client });
+  const item = evaluateFor(req, product, ctx.client);
   const quantityInCart = await sessionModel.getCartQuantity(ctx.shopping.id, product.sku);
   res.json({ item, quantityInCart, sessionToken: ctx.shopping.token });
 });
 
 export const getCart = ah(async (req, res) => {
   const ctx = await loadContext(req);
-  if (!ctx) throw unauthorized('Your shopping session has ended. Please check in again at the kiosk.');
-  res.json({ cart: await enrichCart(ctx.shopping.id, ctx.client) });
+  if (!ctx) throw unauthorized(req.t('msg.sessionEnded'));
+  res.json({ cart: await enrichCart(req, ctx.shopping.id, ctx.client) });
 });
 
 /**
  * Shared by "add" and "set quantity". Not-recommended (restricted) items are allowed once the
  * shopper confirms — client choice — and are still caught by the checkout hard stop (US-4.1).
  */
-async function changeQuantity(ctx, { sku, quantity, confirmed }) {
+async function changeQuantity(req, ctx, { sku, quantity, confirmed }) {
   const product = await productModel.findBySku(sku);
-  if (!product) throw badRequest(`We couldn't find item ${sku}.`);
+  if (!product) throw badRequest(req.t('msg.notFound', { sku }));
 
   if (quantity <= 0) {
     await sessionModel.removeCartItem(ctx.shopping.id, product.sku);
@@ -130,14 +143,14 @@ async function changeQuantity(ctx, { sku, quantity, confirmed }) {
   if (Number(product.on_hand) < quantity) {
     throw conflict(
       Number(product.on_hand) > 0
-        ? `Only ${product.on_hand} of ${product.name} left on the shelf right now.`
-        : `${product.name} just ran out. A volunteer can tell you when more is coming.`,
+        ? req.t('msg.onlyLeft', { n: product.on_hand, name: product.name })
+        : req.t('msg.ranOut', { name: product.name }),
     );
   }
 
-  const item = evaluateItem({ product, profile: ctx.client });
+  const item = evaluateFor(req, product, ctx.client);
   if (item.status === 'restricted' && !confirmed) {
-    throw conflict('Please confirm before adding this item.', { code: 'CONFIRM_RESTRICTED', item });
+    throw conflict(req.t('msg.confirm'), { code: 'CONFIRM_RESTRICTED', item });
   }
 
   await sessionModel.setCartQuantity({
@@ -149,49 +162,49 @@ async function changeQuantity(ctx, { sku, quantity, confirmed }) {
 
   let notice = null;
   if (item.status === 'restricted') {
-    notice = `${product.name} is in your cart. A volunteer will check it with you at the exit.`;
+    notice = req.t('msg.restrictedInCart', { name: product.name });
   } else if (item.status === 'capped' && item.capServings !== null && quantity > item.capServings) {
-    notice = `Heads up: we suggest about ${item.capServings} serving${item.capServings === 1 ? '' : 's'} of ${product.name}. It's your choice.`;
+    notice = req.t('msg.overCap', { n: item.capServings, name: product.name });
   }
   return { item, notice };
 }
 
 export const addItem = ah(async (req, res) => {
   const ctx = await loadContext(req);
-  if (!ctx) throw unauthorized('Your shopping session has ended. Please check in again at the kiosk.');
+  if (!ctx) throw unauthorized(req.t('msg.sessionEnded'));
 
   const sku = String(req.body.sku || '').trim().toUpperCase();
-  if (!sku) throw badRequest('Choose an item first.');
+  if (!sku) throw badRequest(req.t('msg.chooseItem'));
   const step = Math.min(20, Math.max(1, Number(req.body.quantity || 1)));
   const current = await sessionModel.getCartQuantity(ctx.shopping.id, sku);
 
-  const result = await changeQuantity(ctx, { sku, quantity: current + step, confirmed: req.body.confirm === true });
-  res.status(201).json({ added: result.item, notice: result.notice, cart: await enrichCart(ctx.shopping.id, ctx.client) });
+  const result = await changeQuantity(req, ctx, { sku, quantity: current + step, confirmed: req.body.confirm === true });
+  res.status(201).json({ added: result.item, notice: result.notice, cart: await enrichCart(req, ctx.shopping.id, ctx.client) });
 });
 
 export const setQuantity = ah(async (req, res) => {
   const ctx = await loadContext(req);
-  if (!ctx) throw unauthorized('Your shopping session has ended. Please check in again at the kiosk.');
+  if (!ctx) throw unauthorized(req.t('msg.sessionEnded'));
 
   const sku = String(req.params.sku || '').trim().toUpperCase();
   const quantity = Math.floor(Number(req.body.quantity));
-  if (!Number.isFinite(quantity) || quantity < 0 || quantity > 20) throw badRequest('Quantity must be between 0 and 20.');
+  if (!Number.isFinite(quantity) || quantity < 0 || quantity > 20) throw badRequest(req.t('msg.qtyRange'));
 
-  const result = await changeQuantity(ctx, { sku, quantity, confirmed: req.body.confirm === true });
-  res.json({ notice: result.notice, cart: await enrichCart(ctx.shopping.id, ctx.client) });
+  const result = await changeQuantity(req, ctx, { sku, quantity, confirmed: req.body.confirm === true });
+  res.json({ notice: result.notice, cart: await enrichCart(req, ctx.shopping.id, ctx.client) });
 });
 
 export const removeItem = ah(async (req, res) => {
   const ctx = await loadContext(req);
-  if (!ctx) throw unauthorized('Your shopping session has ended. Please check in again at the kiosk.');
+  if (!ctx) throw unauthorized(req.t('msg.sessionEnded'));
   const sku = String(req.params.sku || '').trim().toUpperCase();
   await sessionModel.removeCartItem(ctx.shopping.id, sku);
-  res.json({ cart: await enrichCart(ctx.shopping.id, ctx.client) });
+  res.json({ cart: await enrichCart(req, ctx.shopping.id, ctx.client) });
 });
 
 export const getRecipes = ah(async (req, res) => {
   const ctx = await loadContext(req);
-  if (!ctx) throw unauthorized('Your shopping session has ended. Please check in again at the kiosk.');
+  if (!ctx) throw unauthorized(req.t('msg.sessionEnded'));
 
   const [cart, inventory] = await Promise.all([
     sessionModel.getCart(ctx.shopping.id),
@@ -203,6 +216,7 @@ export const getRecipes = ah(async (req, res) => {
     cart,
     inventory,
     profile: ctx.client,
+    language: languageName(req.lang),
   });
 
   res.json(result);

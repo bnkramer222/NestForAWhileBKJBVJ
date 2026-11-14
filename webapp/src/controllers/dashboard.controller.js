@@ -7,7 +7,7 @@ import { badRequest } from '../lib/httpError.js';
 
 export const showDashboard = ah(async (req, res) => {
   await sessionModel.sweepFloor(); // show an up-to-date floor
-  const [summary, distribution, grants, replenishment, expiring, outcomes, floor, queue] = await Promise.all([
+  const [summary, distribution, grants, replenishment, expiring, outcomes, floor, queue, shoppers] = await Promise.all([
     analyticsModel.getProgramSummary(),
     analyticsModel.getDistributionByCategory(),
     analyticsModel.getGrantAttribution(),
@@ -16,6 +16,7 @@ export const showDashboard = ah(async (req, res) => {
     analyticsModel.getOutcomeTrends(),
     sessionModel.getFloorState(),
     sessionModel.listQueue(),
+    sessionModel.listActiveShoppers(),
   ]);
 
   res.render('dashboard', {
@@ -29,6 +30,7 @@ export const showDashboard = ah(async (req, res) => {
     outcomes,
     floor,
     queue,
+    shoppers,
     flash: req.query.msg ? String(req.query.msg).slice(0, 160) : null,
   });
 });
@@ -40,6 +42,20 @@ export const setCapacity = ah(async (req, res) => {
   const { admitted } = await sessionModel.setFloorCapacity(max);
   const msg = `Floor capacity set to ${max}.` + (admitted ? ` ${admitted} household(s) admitted from the line.` : '');
   res.redirect(303, '/dashboard?msg=' + encodeURIComponent(msg) + '#floor');
+});
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export const endShopper = ah(async (req, res) => {
+  if (!UUID.test(String(req.params.id))) throw badRequest('Unknown session.');
+  const { ended, admitted } = await sessionModel.endSessionByStaff(req.params.id);
+  const msg = ended ? `Session ended.${admitted ? ` ${admitted} household(s) admitted from the line.` : ''}` : 'That session had already ended.';
+  res.redirect(303, '/dashboard?msg=' + encodeURIComponent(msg) + '#floor');
+});
+
+export const clearFloorNow = ah(async (req, res) => {
+  const { ended, admitted } = await sessionModel.clearFloor();
+  res.redirect(303, '/dashboard?msg=' + encodeURIComponent(`Cleared the floor: ended ${ended} session(s), admitted ${admitted} from the line.`) + '#floor');
 });
 
 export const sweepNow = ah(async (req, res) => {

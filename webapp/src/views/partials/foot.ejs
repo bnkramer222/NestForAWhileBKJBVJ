@@ -1,6 +1,6 @@
   </main>
   <footer class="foot">
-    <p><%= brand.name %> by <%= brand.org %> · Free groceries, no ID, no paperwork · Food guidance is general information, not medical advice.</p>
+    <p><%= brand.name %> <%= t('brand.by') %> <%= brand.org %> · <%= t('footer') %></p>
   </footer>
   <% if (typeof bodyClass !== 'undefined' && (bodyClass === 'shop' || bodyClass === 'checkout' || bodyClass === 'kiosk')) { %>
   <script src="/static/vendor/html5-qrcode.min.js" defer></script>

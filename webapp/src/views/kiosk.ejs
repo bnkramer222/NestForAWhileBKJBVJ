@@ -1,43 +1,38 @@
 <%- include('partials/head') %>
 
 <section class="hero">
-  <p class="eyebrow">Welcome — we're glad you're here</p>
-  <h1>Come on in and shop.</h1>
-  <p class="lead">
-    Everything is free. No ID, no paperwork, no questions. Enter or scan the code on your card,
-    and we'll help you find fresh food that fits your health.
-  </p>
+  <p class="eyebrow"><%= t('kiosk.eyebrow') %></p>
+  <h1><%= t('kiosk.h1') %></h1>
+  <p class="lead"><%= t('kiosk.lead') %></p>
 </section>
 
 <div class="grid grid--two">
   <section class="card card--elevated">
-    <h2>Start your visit</h2>
+    <h2><%= t('kiosk.start') %></h2>
     <% if (error) { %>
       <div class="banner banner--error" role="alert"><%= error %></div>
     <% } %>
     <form method="post" action="/kiosk/check-in" class="stack">
-      <label for="token">Your card code</label>
+      <label for="token"><%= t('kiosk.codeLabel') %></label>
       <input id="token" name="token" type="text" inputmode="text" autocomplete="off"
-             placeholder="MTG-1001" autocapitalize="characters" required>
-      <button type="submit" class="btn btn--primary btn--lg">Check in</button>
+             placeholder="MTG-1001" autocapitalize="characters" value="<%= typeof prefillCode !== 'undefined' ? prefillCode : '' %>" required>
+      <button type="submit" class="btn btn--primary btn--lg"><%= t('kiosk.checkIn') %></button>
     </form>
-    <button type="button" id="kiosk-camera-btn" class="btn btn--ghost btn--block">Scan my card</button>
+    <button type="button" id="kiosk-camera-btn" class="btn btn--ghost btn--block"><%= t('kiosk.scanCard') %></button>
     <div id="kiosk-camera" class="camera" hidden></div>
 
-    <p class="small">First time here? <a href="/enroll">Sign up in about two minutes</a> — no ID needed.</p>
+    <p class="small"><%= t('kiosk.firstTime') %> <a href="/enroll"><%= t('kiosk.signupLink') %></a> — <%= t('kiosk.noId') %></p>
   </section>
 
   <section class="card">
-    <h2>How it works</h2>
+    <h2><%= t('kiosk.how') %></h2>
     <ol class="steps">
-      <li><strong>Check in.</strong> We verify MTG enrollment and load your dietary tier.</li>
-      <li><strong>Shop freely.</strong> Scan any item to see green, yellow, or red.</li>
-      <li><strong>Get recipes.</strong> We suggest meals from what is already in your cart.</li>
-      <li><strong>Check out.</strong> A volunteer terminal confirms clinical guardrails.</li>
+      <li><%- t('kiosk.step1') %></li>
+      <li><%- t('kiosk.step2') %></li>
+      <li><%- t('kiosk.step3') %></li>
+      <li><%- t('kiosk.step4') %></li>
     </ol>
-    <p class="muted small">
-      If the floor is full you will join a virtual waiting line and keep your place.
-    </p>
+    <p class="muted small"><%= t('kiosk.full') %></p>
   </section>
 </div>
 

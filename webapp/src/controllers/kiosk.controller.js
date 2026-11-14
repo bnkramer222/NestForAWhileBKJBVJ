@@ -3,13 +3,19 @@ import * as sessionModel from '../models/session.model.js';
 import { resolveTier } from '../services/dietaryMatrix.js';
 import { decrypt } from '../lib/crypto.js';
 import { ah } from '../lib/asyncHandler.js';
+import { setLanguageCookie } from '../i18n/index.js';
+
+const CODE_PARAM = /^MTG-\d{4,8}$/i;
 
 export function showKiosk(req, res) {
+  // ?code=MTG-1001 pre-fills the card code (e.g. from a link or a printed QR); ?lang=xx sets the language.
+  const code = String(req.query.code || '').trim().toUpperCase();
   res.render('kiosk', {
-    title: 'Check in',
+    title: req.t('kiosk.title'),
     bodyClass: 'kiosk',
     error: null,
     floor: null,
+    prefillCode: CODE_PARAM.test(code) ? code : '',
   });
 }
 
@@ -17,9 +23,9 @@ export const checkIn = ah(async (req, res) => {
   const rawToken = String(req.body.token || '').trim().toUpperCase();
   if (!rawToken) {
     return res.status(400).render('kiosk', {
-      title: 'Check in',
+      title: req.t('kiosk.title'),
       bodyClass: 'kiosk',
-      error: 'Please enter the code printed on your card (it looks like MTG-1001).',
+      error: req.t('kiosk.err.empty'),
       floor: null,
     });
   }
@@ -27,9 +33,9 @@ export const checkIn = ah(async (req, res) => {
   const client = await clientModel.findByToken(rawToken);
   if (!client) {
     return res.status(404).render('kiosk', {
-      title: 'Check in',
+      title: req.t('kiosk.title'),
       bodyClass: 'kiosk',
-      error: "We couldn't find that code. Double-check it, or a volunteer at the desk will be happy to help.",
+      error: req.t('kiosk.err.unknown'),
       floor: null,
     });
   }
@@ -40,15 +46,20 @@ export const checkIn = ah(async (req, res) => {
 
   if (expired) {
     return res.status(403).render('error', {
-      title: 'Time to renew',
+      title: req.t('kiosk.renew.title'),
       status: 403,
-      message: `Hi ${client.name}, your membership needs a quick renewal. A volunteer at the desk can do it in a minute — no paperwork.`,
+      message: req.t('kiosk.renew.msg', { name: client.greetingName }),
     });
   }
 
   // One locked step: reuse an open session, take a free slot, or join the back of the line.
   const tier = resolveTier(client.conditions);
   const session = await sessionModel.checkInToFloor({ clientId: client.id, dietaryTierId: tier.id });
+
+  // Switch to the language this client chose at sign-up, unless they just picked one here.
+  if (client.preferredLang && !req.query.lang && client.preferredLang !== req.lang) {
+    setLanguageCookie(res, client.preferredLang);
+  }
 
   if (session.status === 'active') {
     req.session.shopping = { id: session.id, token: session.session_token, clientId: client.id };
@@ -79,17 +90,17 @@ export const showQueueStatus = ah(async (req, res) => {
   }
   if (session.status !== 'queue_waiting') {
     return res.render('error', {
-      title: 'Your spot has ended',
+      title: req.t('queue.ended.title'),
       status: 410,
-      message: "This place in line is no longer active. Check in again at the kiosk and we'll get you right back in line.",
+      message: req.t('queue.ended.msg'),
     });
   }
 
   const floor = await sessionModel.getFloorState();
   res.render('queue', {
-    title: 'Waiting list',
+    title: req.t('queue.title'),
     bodyClass: 'queue',
-    clientName: (decrypt(session.full_name_enc) || 'friend').split(' ')[0],
+    clientName: session.preferred_name_enc ? decrypt(session.preferred_name_enc) : (decrypt(session.full_name_enc) || '').split(' ')[0],
     position,
     floor,
     refreshToken: token,

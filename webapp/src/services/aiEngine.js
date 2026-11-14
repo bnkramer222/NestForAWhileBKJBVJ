@@ -160,7 +160,7 @@ export function sanitizePayload(payload, { inventory, profile }) {
 
 /* ------------------------------------------------------------------ prompts */
 
-function systemPrompt() {
+function systemPrompt(language = 'English') {
   return [
     'You are the Epic Cure medically tailored grocery engine.',
     'Input: a client clinical profile, their cart, and live warehouse inventory with per-item clinical status.',
@@ -173,6 +173,7 @@ function systemPrompt() {
     '- Do not add salt. Use herbs, citrus, spices, and pepper for flavour.',
     '- Favour items whose status is "approved"; use "capped" items sparingly.',
     '- No markdown fences, no prose outside the JSON object.',
+    `- Write "title", "steps" and "clinicalFit" in ${language}. Keep JSON keys and SKUs exactly as given.`,
   ].join('\n');
 }
 
@@ -200,9 +201,9 @@ function buildContext({ cart, inventory, profile }) {
   };
 }
 
-function repairMessages(raw, errors) {
+function repairMessages(raw, errors, language = 'English') {
   return [
-    { role: 'system', content: systemPrompt() },
+    { role: 'system', content: systemPrompt(language) },
     {
       role: 'user',
       content: `Your previous response was rejected for: ${errors.join('; ')}.\nReturn only the corrected JSON object.\n\nPrevious response:\n${String(raw).slice(0, 4000)}`,
@@ -368,7 +369,7 @@ export function evaluateItem({ product, profile }) {
   };
 }
 
-export async function synthesizeRecipes({ sessionId = null, cart = [], inventory = [], profile = {} }) {
+export async function synthesizeRecipes({ sessionId = null, cart = [], inventory = [], profile = {}, language = 'English' }) {
   const normalizedProfile = { conditions: profile.conditions || [], allergies: profile.allergies || [] };
   const fallback = localRecipes({ cart, inventory, profile: normalizedProfile });
   const config = getProviderConfig();
@@ -401,7 +402,7 @@ export async function synthesizeRecipes({ sessionId = null, cart = [], inventory
 
   const context = buildContext({ cart, inventory, profile: normalizedProfile });
   let messages = [
-    { role: 'system', content: systemPrompt() },
+    { role: 'system', content: systemPrompt(language) },
     { role: 'user', content: JSON.stringify(context) },
   ];
 
@@ -417,21 +418,21 @@ export async function synthesizeRecipes({ sessionId = null, cart = [], inventory
 
       if (!parsed) {
         errors = ['response was not valid JSON'];
-        messages = repairMessages(result.content, errors);
+        messages = repairMessages(result.content, errors, language);
         continue;
       }
 
       const validation = validatePayload(parsed);
       if (!validation.ok) {
         errors = validation.errors;
-        messages = repairMessages(result.content, errors);
+        messages = repairMessages(result.content, errors, language);
         continue;
       }
 
       const sanitized = sanitizePayload(parsed, { inventory, profile: normalizedProfile });
       if (!sanitized.recipes.length) {
         errors = ['every recipe referenced an unknown, out-of-stock, or restricted SKU'];
-        messages = repairMessages(result.content, errors);
+        messages = repairMessages(result.content, errors, language);
         continue;
       }
 

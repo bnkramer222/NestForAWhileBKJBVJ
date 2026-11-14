@@ -1,28 +1,25 @@
 <%- include('partials/head') %>
 
 <section class="hero">
-  <p class="eyebrow">It's busy right now</p>
-  <h1>You're in line, <%= clientName %>.</h1>
-  <p class="lead">
-    The market floor is full, so we're holding your place. No need to stand at the desk —
-    keep this page open and it will take you straight to your shopping list when it's your turn.
-  </p>
+  <p class="eyebrow"><%= t('queue.eyebrow') %></p>
+  <h1><%= t('queue.h1', { name: clientName }) %></h1>
+  <p class="lead"><%= t('queue.lead') %></p>
 </section>
 
 <section class="card card--elevated queue-card" id="queue-app" data-token="<%= refreshToken %>">
-  <p class="muted small">Your place in line</p>
+  <p class="muted small"><%= t('queue.place') %></p>
   <p class="queue-position"><span id="queue-pos"><%= position %></span></p>
   <p id="queue-ahead" class="muted">
-    <% if (position <= 1) { %>You're next!<% } else { %><strong><%= position - 1 %></strong> <%= position - 1 === 1 ? 'household' : 'households' %> ahead of you<% } %>
+    <%= position <= 1 ? t('queue.next') : (position - 1 === 1 ? t('queue.ahead.one') : t('queue.ahead.many', { n: position - 1 })) %>
   </p>
   <p class="muted small">
     <span class="live-dot" aria-hidden="true"></span>
-    Updating live · <%= floor.active %> of <%= floor.max %> shoppers on the floor
+    <%= t('queue.live', { active: floor.active, max: floor.max }) %>
   </p>
   <p id="queue-status" class="notice" role="status" hidden></p>
   <form method="post" action="/queue/leave">
     <input type="hidden" name="token" value="<%= refreshToken %>">
-    <button type="submit" class="btn btn--ghost">Leave the line</button>
+    <button type="submit" class="btn btn--ghost"><%= t('queue.leave') %></button>
   </form>
 </section>
 

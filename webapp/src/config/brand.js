@@ -5,6 +5,7 @@
 export const brand = {
   name: process.env.APP_NAME || 'Nourish',
   org: 'Epic Cure',
-  tagline: process.env.APP_TAGLINE || 'Fresh food that fits your health',
+  // Empty = use the translated tagline for the shopper's language.
+  tagline: process.env.APP_TAGLINE || '',
   mark: (process.env.APP_NAME || 'Nourish').trim().charAt(0).toUpperCase(),
 };

@@ -1,12 +1,9 @@
 <%- include('partials/head') %>
 
 <section class="hero">
-  <p class="eyebrow">Sign up</p>
-  <h1>Let's set you up.</h1>
-  <p class="lead">
-    It takes about two minutes. Tell us about your household and any health conditions once, and
-    every visit we'll point you to food that fits. No ID, no paperwork — and your answers stay private.
-  </p>
+  <p class="eyebrow"><%= t('enroll.eyebrow') %></p>
+  <h1><%= t('enroll.h1') %></h1>
+  <p class="lead"><%= t('enroll.lead') %></p>
 </section>
 
 <% if (error) { %>
@@ -16,83 +13,94 @@
 <form method="post" action="/enroll" class="card stack">
   <div class="grid grid--two">
     <div class="stack">
-      <label for="name">Name</label>
-      <input id="name" name="name" type="text" value="<%= values.name %>" maxlength="80" required>
-      <p class="muted small">First name is fine. It's kept private and encrypted.</p>
+      <label for="name"><%= t('enroll.name') %></label>
+      <input id="name" name="name" type="text" value="<%= values.name %>" maxlength="80" autocomplete="name" required>
+      <p class="muted small"><%= t('enroll.nameHint') %></p>
     </div>
     <div class="stack">
-      <label for="household_size">Household size</label>
+      <label for="preferred_name"><%= t('enroll.preferred') %></label>
+      <input id="preferred_name" name="preferred_name" type="text" value="<%= values.preferredName %>" maxlength="40" autocomplete="nickname">
+      <p class="muted small"><%= t('enroll.preferredHint') %></p>
+    </div>
+    <div class="stack">
+      <label for="household_size"><%= t('enroll.household') %></label>
       <select id="household_size" name="household_size" required>
         <% for (let size = 1; size <= 12; size += 1) { %>
           <option value="<%= size %>" <%= values.householdSize === size ? 'selected' : '' %>><%= size %></option>
         <% } %>
       </select>
-      <p class="muted small">Drives the pounds-per-visit target for your dietary tier.</p>
+      <p class="muted small"><%= t('enroll.householdHint') %></p>
+    </div>
+    <div class="stack">
+      <label for="preferred_lang"><%= t('enroll.language') %></label>
+      <select id="preferred_lang" name="preferred_lang">
+        <% languages.forEach(function (l) { %>
+          <option value="<%= l.code %>" lang="<%= l.code %>" <%= values.preferredLang === l.code ? 'selected' : '' %>><%= l.label %></option>
+        <% }) %>
+      </select>
     </div>
   </div>
 
   <fieldset class="stack">
-    <legend>Chronic conditions (ICD-10)</legend>
-    <p class="muted small">Select every condition that applies. Multiple conditions are handled together.</p>
+    <legend><%= t('enroll.conditions') %></legend>
+    <p class="muted small"><%= t('enroll.conditionsHint') %></p>
     <div class="checkbox-grid">
       <% conditions.forEach(function (condition) { %>
         <label class="checkbox">
           <input type="checkbox" name="conditions" value="<%= condition.code %>"
                  <%= values.conditions.includes(condition.code) ? 'checked' : '' %>>
-          <span><strong><%= condition.code %></strong> — <%= condition.name %></span>
+          <span><%= t('cond.' + condition.code) %> <span class="muted small">(<%= condition.code %>)</span></span>
         </label>
       <% }) %>
     </div>
   </fieldset>
 
   <fieldset class="stack">
-    <legend>Food allergies <span class="muted small">(optional — tap all that apply)</span></legend>
+    <legend><%= t('enroll.allergies') %> <span class="muted small"><%= t('enroll.allergiesHint') %></span></legend>
     <div class="chip-grid">
       <% allergenOptions.forEach(function (option) { %>
         <label class="chip">
           <input type="checkbox" name="allergies" value="<%= option.key %>"
                  <%= values.allergies.includes(option.key) ? 'checked' : '' %>>
-          <span><span aria-hidden="true"><%= option.icon %></span> <%= option.label %></span>
+          <span><span aria-hidden="true"><%= option.icon %></span> <%= t('allergen.' + option.key) %></span>
         </label>
       <% }) %>
     </div>
-    <label for="allergies_other" class="small">Something else? <span class="muted">(optional, separate with commas)</span></label>
-    <input id="allergies_other" name="allergies_other" type="text" maxlength="160" value="<%= values.allergiesOther %>" placeholder="e.g. strawberries">
-    <p class="muted small">We'll mark any item with these as "Not the best fit" for you.</p>
+    <label for="allergies_other" class="small"><%= t('enroll.other') %> <span class="muted"><%= t('enroll.otherHint') %></span></label>
+    <input id="allergies_other" name="allergies_other" type="text" maxlength="160" value="<%= values.allergiesOther %>" placeholder="<%= t('enroll.otherPlaceholder') %>">
+    <p class="muted small"><%= t('enroll.allergyNote') %></p>
   </fieldset>
 
   <fieldset class="stack">
-    <legend>Latest health readings (optional)</legend>
-    <p class="muted small">From your last clinic visit, if you have them. They become your baseline so the program can show (anonymously) whether health improves over time.</p>
+    <legend><%= t('enroll.readings') %></legend>
+    <p class="muted small"><%= t('enroll.readingsHint') %></p>
     <div class="grid grid--two">
       <div class="stack">
-        <label for="a1c_pct">HbA1c (%)</label>
+        <label for="a1c_pct"><%= t('enroll.a1c') %></label>
         <input id="a1c_pct" name="a1c_pct" type="number" step="0.1" min="3" max="20" inputmode="decimal" value="<%= values.a1c_pct %>">
       </div>
       <div class="stack">
-        <label for="egfr">eGFR (mL/min)</label>
+        <label for="egfr"><%= t('enroll.egfr') %></label>
         <input id="egfr" name="egfr" type="number" step="1" min="1" max="150" inputmode="numeric" value="<%= values.egfr %>">
       </div>
       <div class="stack">
-        <label for="systolic">Blood pressure — systolic</label>
+        <label for="systolic"><%= t('enroll.systolic') %></label>
         <input id="systolic" name="systolic" type="number" step="1" min="60" max="260" inputmode="numeric" value="<%= values.systolic %>">
       </div>
       <div class="stack">
-        <label for="diastolic">Blood pressure — diastolic</label>
+        <label for="diastolic"><%= t('enroll.diastolic') %></label>
         <input id="diastolic" name="diastolic" type="number" step="1" min="30" max="160" inputmode="numeric" value="<%= values.diastolic %>">
       </div>
       <div class="stack">
-        <label for="weight_lbs">Weight (lb)</label>
+        <label for="weight_lbs"><%= t('enroll.weight') %></label>
         <input id="weight_lbs" name="weight_lbs" type="number" step="0.1" min="40" max="700" inputmode="decimal" value="<%= values.weight_lbs %>">
       </div>
     </div>
   </fieldset>
 
-  <div class="banner">
-    Your health information is private. It's encrypted, never printed on a receipt, and never shared with your name attached.
-  </div>
+  <div class="banner"><%= t('enroll.privacy') %></div>
 
-  <button type="submit" class="btn btn--primary btn--lg">Create my card</button>
+  <button type="submit" class="btn btn--primary btn--lg"><%= t('enroll.submit') %></button>
 </form>
 
 <%- include('partials/foot') %>

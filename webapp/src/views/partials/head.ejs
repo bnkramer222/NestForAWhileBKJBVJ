@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="<%= typeof lang !== 'undefined' ? lang : 'en' %>">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,21 +8,28 @@
   <link rel="stylesheet" href="/static/css/styles.css">
   <meta name="theme-color" content="#14532d">
 </head>
-<body class="<%= typeof bodyClass !== 'undefined' ? bodyClass : '' %>">
-  <a class="skip-link" href="#main">Skip to content</a>
+<body class="<%= typeof bodyClass !== 'undefined' ? bodyClass : '' %>" data-i18n="<%= typeof clientStrings !== 'undefined' ? clientStrings : '{}' %>">
+  <a class="skip-link" href="#main"><%= t('skip') %></a>
   <header class="topbar">
     <a class="brand" href="/kiosk">
       <span class="brand-mark" aria-hidden="true"><%= brand.mark %></span>
-      <span class="brand-text"><%= brand.name %> <small>by <%= brand.org %> · <%= brand.tagline %></small></span>
+      <span class="brand-text"><%= brand.name %> <small><%= t('brand.by') %> <%= brand.org %> · <%= brand.tagline || t('brand.tagline') %></small></span>
     </a>
     <nav class="nav" aria-label="Primary">
-      <a href="/kiosk" class="<%= currentPath === '/kiosk' ? 'is-active' : '' %>">Kiosk</a>
-      <a href="/enroll" class="<%= currentPath === '/enroll' ? 'is-active' : '' %>">Sign up</a>
-      <a href="/shop" class="<%= currentPath === '/shop' ? 'is-active' : '' %>">Shop</a>
-      <a href="/checkout" class="<%= currentPath === '/checkout' ? 'is-active' : '' %>">Checkout</a>
-      <a href="/dashboard" class="<%= currentPath === '/dashboard' ? 'is-active' : '' %>">Dashboard</a>
-      <a href="/barcodes" class="<%= currentPath === '/barcodes' ? 'is-active' : '' %>">Demo codes</a>
+      <a href="/kiosk" class="<%= currentPath === '/kiosk' ? 'is-active' : '' %>"><%= t('nav.kiosk') %></a>
+      <a href="/enroll" class="<%= currentPath === '/enroll' ? 'is-active' : '' %>"><%= t('nav.signup') %></a>
+      <a href="/shop" class="<%= currentPath === '/shop' ? 'is-active' : '' %>"><%= t('nav.shop') %></a>
+      <a href="/checkout" class="<%= currentPath === '/checkout' ? 'is-active' : '' %>"><%= t('nav.checkout') %></a>
+      <a href="/dashboard" class="<%= currentPath === '/dashboard' ? 'is-active' : '' %>"><%= t('nav.dashboard') %></a>
+      <a href="/barcodes" class="<%= currentPath === '/barcodes' ? 'is-active' : '' %>"><%= t('nav.codes') %></a>
     </nav>
+    <% if (typeof languages !== 'undefined') { %>
+      <nav class="lang-switch" aria-label="<%= t('nav.language') %>">
+        <% languages.forEach(function (l) { %>
+          <a href="<%= langUrl(l.code) %>" hreflang="<%= l.code %>" lang="<%= l.code %>" class="<%= l.code === lang ? 'is-active' : '' %>" <%= l.code === lang ? 'aria-current=true' : '' %>><%= l.label %></a>
+        <% }) %>
+      </nav>
+    <% } %>
   </header>
 
   <% if (typeof dbEnabled !== 'undefined' && !dbEnabled) { %>

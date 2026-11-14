@@ -2,18 +2,17 @@
 
 <section class="session-header welcome">
   <div>
-    <p class="eyebrow">You're checked in</p>
-    <h1>Hi, <%= firstName %>! Take your time.</h1>
+    <p class="eyebrow"><%= t('shop.eyebrow') %></p>
+    <h1><%= t('shop.h1', { name: firstName }) %></h1>
     <p class="muted">
-      Shopping for <%= shopper.householdSize %> <%= shopper.householdSize === 1 ? 'person' : 'people' %> today.
-      Everything here is free. Pick what your household will enjoy, and we'll help you see what fits your health plan.
+      <%= shopper.householdSize === 1 ? t('shop.lead.one') : t('shop.lead.many', { n: shopper.householdSize }) %>
     </p>
   </div>
   <div class="tier-note">
-    <strong>Your food plan: <%= tier.label %></strong><br>
-    <%= tier.notes %>
+    <strong><%= t('shop.plan', { plan: plan.label }) %></strong><br>
+    <%= plan.notes %>
     <% if (allergyLabels.length) { %>
-      <p class="allergy-line">🚫 <strong>Avoiding:</strong> <%= allergyLabels.join(', ') %></p>
+      <p class="allergy-line">🚫 <strong><%= t('shop.avoiding') %></strong> <%= allergyLabels.join(', ') %></p>
     <% } %>
   </div>
 </section>
@@ -23,55 +22,55 @@
      data-cart="<%= JSON.stringify(cart) %>"
      data-status-copy="<%= JSON.stringify(statusCopy) %>">
 
-  <div class="legend" aria-label="What the colors mean">
-    <span><span class="badge badge--approved"><%= statusCopy.approved.label %></span> works well for you</span>
-    <span><span class="badge badge--capped"><%= statusCopy.capped.label %></span> about one serving is best</span>
-    <span><span class="badge badge--restricted"><%= statusCopy.restricted.label %></span> you can still take it — a volunteer will check it with you</span>
+  <div class="legend">
+    <span><span class="badge badge--approved"><%= statusCopy.approved.label %></span> <%= t('shop.legend.approved') %></span>
+    <span><span class="badge badge--capped"><%= statusCopy.capped.label %></span> <%= t('shop.legend.capped') %></span>
+    <span><span class="badge badge--restricted"><%= statusCopy.restricted.label %></span> <%= t('shop.legend.restricted') %></span>
   </div>
 
   <div class="grid grid--two">
     <section class="card">
-      <h2>Check an item</h2>
-      <p class="muted small">Scan the barcode on the shelf tag, or type the number printed under it.</p>
+      <h2><%= t('shop.check') %></h2>
+      <p class="muted small"><%= t('shop.checkHint') %></p>
       <form id="scan-form" class="stack">
-        <label for="sku">Item number</label>
+        <label for="sku"><%= t('shop.itemNumber') %></label>
         <div class="input-row">
-          <input id="sku" name="sku" type="text" inputmode="numeric" autocomplete="off" placeholder="e.g. 100101" required>
-          <button type="submit" class="btn btn--primary">Check</button>
+          <input id="sku" name="sku" type="text" inputmode="numeric" autocomplete="off" placeholder="100101" required>
+          <button type="submit" class="btn btn--primary"><%= t('shop.checkBtn') %></button>
         </div>
       </form>
-      <button type="button" id="camera-btn" class="btn btn--ghost btn--block">Scan with camera</button>
+      <button type="button" id="camera-btn" class="btn btn--ghost btn--block"><%= t('shop.scanCamera') %></button>
       <div id="camera-preview" class="camera" hidden></div>
       <div id="scan-result" class="result" hidden></div>
     </section>
 
     <section class="card">
       <div class="card-head">
-        <h2>Your cart</h2>
-        <span id="cart-count" class="pill">0 items</span>
+        <h2><%= t('shop.cart') %></h2>
+        <span id="cart-count" class="pill"></span>
       </div>
       <ul id="cart-list" class="cart-list" aria-live="polite"></ul>
       <p id="cart-notice" class="notice" role="status" hidden></p>
-      <button type="button" id="recipes-btn" class="btn btn--ghost btn--block">Get meal ideas from my cart</button>
+      <button type="button" id="recipes-btn" class="btn btn--ghost btn--block"><%= t('shop.meals') %></button>
     </section>
   </div>
 
   <section class="card" id="recipes-panel" hidden>
     <div class="card-head">
-      <h2>Meal ideas for your cart</h2>
+      <h2><%= t('shop.mealsTitle') %></h2>
       <span id="recipes-source" class="pill"></span>
     </div>
     <div id="recipes-list" class="recipe-grid"></div>
-    <h3>Want to finish a recipe?</h3>
+    <h3><%= t('shop.finish') %></h3>
     <ul id="missing-list" class="missing-list"></ul>
   </section>
 
   <section class="card">
-    <h2>Picked for you today</h2>
-    <p class="muted small">Good matches for your plan that are on the shelves right now.</p>
+    <h2><%= t('shop.picked') %></h2>
+    <p class="muted small"><%= t('shop.pickedHint') %></p>
     <ul class="targets">
       <% Object.keys(needs).forEach(function (category) { %>
-        <li><span><%= categoryCopy[category] || category %></span> <strong>about <%= needs[category] %> lb</strong></li>
+        <li><span><%= categoryCopy[category] || category %></span> <strong><%= t('shop.about', { n: needs[category] }) %></strong></li>
       <% }) %>
     </ul>
     <div class="rec-grid">
@@ -81,23 +80,24 @@
             <span class="badge badge--<%= item.status %>"><%= statusCopy[item.status].label %></span>
             <span class="pill"><%= categoryCopy[item.category] || item.category %></span>
           </div>
-          <h3><%= item.name %></h3>
-          <p class="muted small">Aisle <%= item.aisle %> · Shelf <%= item.shelf %> · Bin <%= item.bin %></p>
-          <button type="button" class="btn btn--ghost btn--sm js-add" data-sku="<%= item.sku %>">Add to cart</button>
+          <h3 lang="en"><%= item.name %></h3>
+          <p class="muted small"><%= t('shop.location', { aisle: item.aisle, shelf: item.shelf, bin: item.bin }) %></p>
+          <button type="button" class="btn btn--ghost btn--sm js-add" data-sku="<%= item.sku %>"><%= t('shop.addToCart') %></button>
         </article>
       <% }) %>
       <% if (!recommendations.length) { %>
-        <p class="muted">We're still restocking. A volunteer can help you find good options.</p>
+        <p class="muted"><%= t('shop.restocking') %></p>
       <% } %>
     </div>
   </section>
 
   <section class="card" id="browse">
     <div class="card-head">
-      <h2>Everything on the floor today</h2>
-      <input id="browse-search" class="search" type="search" placeholder="Search, e.g. rice" aria-label="Search all items">
+      <h2><%= t('shop.everything') %></h2>
+      <input id="browse-search" class="search" type="search" placeholder="<%= t('shop.search') %>" aria-label="<%= t('shop.search') %>">
     </div>
-    <p class="muted small">You're welcome to take anything. Colors show how each item fits your plan.</p>
+    <p class="muted small"><%= t('shop.everythingHint') %></p>
+    <% if (lang !== 'en') { %><p class="muted small"><%= t('shop.productNote') %></p><% } %>
     <% catalog.forEach(function (group) { %>
       <details class="browse-group">
         <summary><%= group.label %> <span class="muted small">(<%= group.items.length %>)</span></summary>
@@ -105,41 +105,41 @@
           <% group.items.forEach(function (item) { %>
             <li class="browse-item" data-name="<%= item.name.toLowerCase() %>">
               <span class="badge badge--<%= item.status %>"><%= statusCopy[item.status].label %></span>
-              <span class="browse-name"><%= item.name %>
-                <span class="muted small">· Aisle <%= item.aisle %>, Shelf <%= item.shelf %> · #<%= item.sku %></span>
+              <span class="browse-name"><span lang="en"><%= item.name %></span>
+                <span class="muted small">· <%= t('shop.location', { aisle: item.aisle, shelf: item.shelf, bin: item.bin }) %> · #<%= item.sku %></span>
               </span>
               <button type="button" class="btn btn--ghost btn--sm js-add" data-sku="<%= item.sku %>">
-                <%= item.status === 'restricted' ? 'Add anyway' : 'Add' %>
+                <%= item.status === 'restricted' ? t('shop.addAnyway') : t('shop.add') %>
               </button>
             </li>
           <% }) %>
         </ul>
       </details>
     <% }) %>
-    <p id="browse-empty" class="muted" hidden>No items match that search.</p>
+    <p id="browse-empty" class="muted" hidden><%= t('shop.noMatch') %></p>
   </section>
 
   <section class="card exit-pass" id="exit-pass">
-    <h2>Your exit pass</h2>
-    <p class="muted small">When you're done, show this to the volunteer at the exit. They'll help you bag up.</p>
-    <img src="<%= exitQr %>" alt="Exit pass QR code for session <%= sessionToken %>" width="220" height="220">
+    <h2><%= t('shop.exitPass') %></h2>
+    <p class="muted small"><%= t('shop.exitHint') %></p>
+    <img src="<%= exitQr %>" alt="QR <%= sessionToken %>" width="220" height="220">
     <p class="exit-token"><code><%= sessionToken %></code></p>
   </section>
 
   <form method="post" action="/shop/exit" class="end-session">
-    <button type="submit" class="btn btn--ghost">Leave without checking out</button>
+    <button type="submit" class="btn btn--ghost"><%= t('shop.leave') %></button>
   </form>
 </div>
 
 <div id="confirm-sheet" class="sheet" role="dialog" aria-modal="true" aria-labelledby="confirm-title" hidden>
   <div class="sheet-card">
-    <h2 id="confirm-title">Probably not the best fit for you</h2>
-    <p id="confirm-name" class="sheet-item"></p>
+    <h2 id="confirm-title"><%= statusCopy.restricted.headline %></h2>
+    <p id="confirm-name" class="sheet-item" lang="en"></p>
     <ul id="confirm-reasons" class="small"></ul>
     <p class="small muted"><%= statusCopy.restricted.detail %></p>
     <div class="sheet-actions">
-      <button type="button" id="confirm-no" class="btn btn--primary">Leave it on the shelf</button>
-      <button type="button" id="confirm-yes" class="btn btn--ghost">Add anyway</button>
+      <button type="button" id="confirm-no" class="btn btn--primary"><%= t('confirm.no') %></button>
+      <button type="button" id="confirm-yes" class="btn btn--ghost"><%= t('confirm.yes') %></button>
     </div>
   </div>
 </div>

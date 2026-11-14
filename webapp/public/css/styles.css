@@ -346,3 +346,9 @@ div.camera video { width: 100% !important; border-radius: 10px; }
 .live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--green-500); margin-right: 0.35rem; animation: pulse 1.6s infinite; vertical-align: middle; }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
 @media (prefers-reduced-motion: reduce) { .live-dot { animation: none; } }
+
+/* ---------- language switcher ---------- */
+.lang-switch { display: flex; flex-wrap: wrap; gap: 0.25rem 0.4rem; margin-top: 0.4rem; font-size: 0.85rem; }
+.lang-switch a { color: inherit; opacity: 0.8; text-decoration: none; padding: 0.15rem 0.55rem; border-radius: 999px; border: 1px solid transparent; }
+.lang-switch a:hover { opacity: 1; border-color: currentColor; }
+.lang-switch a.is-active { opacity: 1; background: rgba(255, 255, 255, 0.18); font-weight: 600; }

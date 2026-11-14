@@ -414,3 +414,11 @@ can you also fix the queue it doesnt work properly i think, i will then put the 
 ```
 
 > Outcome: Claude reproduced the queue with four simulated shoppers in a browser. Bugs: the waiting page was rendered at the POST URL (`/kiosk/check-in`), so a refresh showed "Page not found"; shoppers who walked away held floor slots forever; the floor counter could drift; capacity was hard-coded (MAX_FLOOR_CAPACITY ignored). Rebuilt floor/queue as one transaction under a Postgres advisory lock with the counter re-derived from real sessions; strict FIFO; heartbeat (`last_seen_at`) with auto-release after inactivity plus a 1-minute sweep; waiting page now has its own URL, updates live every 5 s, auto-advances to the shop, and backs off on weak Wi-Fi; dashboard panel to set capacity, see the (anonymous) line, and release inactive sessions. Verified: 12 browser scenarios pass; 12 simultaneous check-ins at capacity 3 → exactly 3 on the floor, 9 in line.
+
+## 014 — 2026-11-14 (Claude)
+
+```text
+can you implement language and name support/ parameters, and can you also make the queue work. right now if you're in the queue you never get to shop
+```
+
+> Outcome: Queue root cause: sessions left "active" by earlier testing filled the floor, and adding the `last_seen_at` column stamped them all as fresh with a 2-hour timeout, so people in line waited ~2 hours. Fixes: 20-minute inactivity release (open pages send heartbeats), staff "On the floor" list with End / Clear the floor buttons. Languages: English, Spanish, French, Haitian Creole, Simplified Chinese for every shopper-facing page, message, color label and "why" explanation (228 strings each), header switcher, `?lang=` parameter remembered in a cookie, browser-language detection, AI recipes requested in the shopper's language; staff screens stay English; product names stay English (shelf labels). Names: optional "What should we call you?" (encrypted) used in greetings, preferred language saved at sign-up and applied at check-in, `?name=` pre-fills sign-up, `?code=` pre-fills the kiosk. Verified with browser tests in all 5 languages plus the earlier shopping, allergy and queue tests; 34/34 unit tests pass. Translations were written by Claude and should be reviewed by native speakers.

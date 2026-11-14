@@ -15,9 +15,11 @@ export const env = {
   sessionSecret: process.env.SESSION_SECRET || 'dev-only-change-me',
   phiKey: process.env.PHI_KEY || '',
   maxFloorCapacity: Number(process.env.MAX_FLOOR_CAPACITY || 25),
-  // Minutes of inactivity before a shopper's floor slot / a place in line is released.
-  shoppingTimeoutMin: Number(process.env.SHOPPING_TIMEOUT_MIN || 120),
-  queueTimeoutMin: Number(process.env.QUEUE_TIMEOUT_MIN || 15),
+  // Minutes of silence before a floor slot / place in line is released. An open shop page sends a
+  // heartbeat every 2 minutes and the waiting page polls every 5 seconds, so only people who
+  // actually left (closed the page, walked out without checking out) hit these limits.
+  shoppingTimeoutMin: Number(process.env.SHOPPING_TIMEOUT_MIN || 20),
+  queueTimeoutMin: Number(process.env.QUEUE_TIMEOUT_MIN || 10),
 
   // System of Intelligence. provider: groq | hf | ollama | none
   aiProvider: (process.env.AI_PROVIDER || '').toLowerCase(),

@@ -1,30 +1,23 @@
 /**
- * Plain-language wording for shoppers. Clinical terms (approved / capped / restricted, ICD-10
- * codes) stay on the volunteer and staff screens; shoppers see friendly, non-judgmental labels.
+ * Plain-language wording for shoppers, in their language. Clinical terms (approved / capped /
+ * restricted, ICD-10 codes) stay on the volunteer and staff screens.
  */
-export const STATUS_COPY = {
-  approved: {
-    label: 'Great fit',
-    headline: 'A great fit for you',
-    detail: 'Enjoy — this works well with your health plan.',
-  },
-  capped: {
-    label: 'Small amounts',
-    headline: 'Good in small amounts',
-    detail: 'Fine to take — we suggest keeping it to about one serving.',
-  },
-  restricted: {
-    label: 'Not the best fit',
-    headline: 'Probably not the best fit for you',
-    detail:
-      'You can still take it. A volunteer will check it with you at the exit so you leave with food that is safe for you.',
-  },
-};
+const STATUSES = ['approved', 'capped', 'restricted'];
+const CATEGORIES = ['produce', 'protein', 'dairy', 'grain', 'pantry'];
 
-export const CATEGORY_COPY = {
-  produce: 'Fruits & vegetables',
-  protein: 'Proteins',
-  dairy: 'Dairy & alternatives',
-  grain: 'Breads & grains',
-  pantry: 'Pantry',
-};
+export function statusCopy(t) {
+  return Object.fromEntries(
+    STATUSES.map((status) => [
+      status,
+      {
+        label: t(`status.${status}.label`),
+        headline: t(`status.${status}.headline`),
+        detail: t(`status.${status}.detail`),
+      },
+    ]),
+  );
+}
+
+export function categoryCopy(t) {
+  return Object.fromEntries(CATEGORIES.map((category) => [category, t(`cat.${category}`)]));
+}

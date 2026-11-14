@@ -18,7 +18,7 @@ import {
   apiRemove,
   apiComplete,
 } from '../controllers/checkout.controller.js';
-import { showDashboard, exportCsv, setCapacity, sweepNow } from '../controllers/dashboard.controller.js';
+import { showDashboard, exportCsv, setCapacity, sweepNow, endShopper, clearFloorNow } from '../controllers/dashboard.controller.js';
 import { health } from '../controllers/health.controller.js';
 import { showBarcodes } from '../controllers/demo.controller.js';
 import { showEnroll, submitEnroll } from '../controllers/enrollment.controller.js';
@@ -52,6 +52,8 @@ router.get('/dashboard', showDashboard);
 router.get('/dashboard/export/:report.csv', exportCsv);
 router.post('/dashboard/floor/capacity', setCapacity);
 router.post('/dashboard/floor/sweep', sweepNow);
+router.post('/dashboard/floor/end/:id', endShopper);
+router.post('/dashboard/floor/clear', clearFloorNow);
 
 // JSON API used by the mobile shopping companion and volunteer terminal
 router.post('/api/scan', scanItem);
