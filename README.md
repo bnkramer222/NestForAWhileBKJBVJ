@@ -51,31 +51,14 @@ npm run dev                 # http://localhost:3000/kiosk
 ```
 
 `.env` values:
-# Local development only. This file is gitignored — never commit it.
-# ---------------------------------------------------------------- app
+
 NODE_ENV=development
 PORT=3000
-
-# ---------------------------------------------------------------- database
-# Paste the Render Postgres EXTERNAL connection string here if you seed from this Mac.
-# Dashboard -> Postgres service -> Connect -> External Database URL
-# Leave blank to run in degraded mode (kiosk/shop pages need a DB; /healthz reports degraded).
 DATABASE_URL=postgresql://nest4awhie_bkjbvj_user:RDayo2Cz3HXmGxfBgVRzUw7lryxcu6Hh@dpg-dbsa04mc6qcc738jq4pg-a.oregon-postgres.render.com/nest4awhie_bkjbvj
 PGSSL=true
-
-# ---------------------------------------------------------------- session + PHI
-# Generated for local dev. Render generates its own in production — do not reuse these there.
 SESSION_SECRET=6c49e6b8481bec85ab7043cba371551a66dfef1fca2d3212fb2956440e074ed6
 PHI_KEY=c272a6307f4d7cc9ddce42993b225ab260b0d44d84b2c99541f3da80270f1fae
-
-# Changing PHI_KEY after seeding makes stored client names unreadable. Set once, keep it.
 MAX_FLOOR_CAPACITY=25
-
-# ---------------------------------------------------------------- AI engine
-# provider: groq | hf | ollama | none   (blank = deterministic fallback only)
-# groq  = Groq free tier, works from Render          -> console.groq.com
-# ollama= local runner at 127.0.0.1:11434, dev only
-# hf    = Hugging Face router
 AI_PROVIDER=groq
 AI_API_KEY=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
 AI_BASE_URL=https://api.groq.com/openai/v1
