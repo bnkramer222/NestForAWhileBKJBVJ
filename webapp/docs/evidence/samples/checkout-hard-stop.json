@@ -1,0 +1,12 @@
+{
+  "error": "Clinical hard stop: restricted items must be removed before checkout.",
+  "details": {
+    "code": "RESTRICTED_ITEM",
+    "items": [
+      {
+        "sku": "100101",
+        "name": "Bananas"
+      }
+    ]
+  }
+}

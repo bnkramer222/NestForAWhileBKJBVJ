@@ -1,7 +1,9 @@
 # Prompt Log
 
 Project: Epic Cure Medically Tailored Groceries (MTG) — 2026 NestforAwhile AI-Augmented Software Engineer Challenge.
-Prompts recorded verbatim, in order. Only user prompts are logged.
+Key prompts, recorded verbatim (uploads and pasted output summarized in [brackets]). Only user prompts are logged.
+Sessions: 001–020 OpenCode using DeepSeek Flash · 021–054 Claude · 055–068 ChatGPT. Numbers match
+`docs/Prompt-Log.docx`; gaps are routine prompts (tool setup, copying files, rewording) left out of the index.
 
 ---
 
@@ -361,7 +363,75 @@ Which model endpoint are you going with, Groq free tier or Hugging Face? Once yo
 okay can you fix and impliment these things for me
 ```
 
-## 007 — 2026-11-14 (Claude)
+---
+
+# Part 1 (continued) — OpenCode, using DeepSeek Flash
+
+## 008 — 2026-11-14 (OpenCode · DeepSeek Flash)
+
+```text
+so what do we need to do
+```
+
+## 009 — 2026-11-14 (OpenCode · DeepSeek Flash)
+
+```text
+where is ai key and DB key located
+```
+
+## 011 — 2026-11-14 (OpenCode · DeepSeek Flash)
+
+```text
+where in environment is keys
+```
+
+## 012 — 2026-11-14 (OpenCode · DeepSeek Flash)
+
+```text
+where in render is the tab that requires e=keys
+```
+
+## 013 — 2026-11-14 (OpenCode · DeepSeek Flash)
+
+```text
+it says we need a render.yaml
+```
+
+## 014 — 2026-11-14 (OpenCode · DeepSeek Flash)
+
+```text
+what is the database url and how is it set
+```
+
+## 016 — 2026-11-14 (OpenCode · DeepSeek Flash)
+
+```text
+does my files contain a .env, if not create one i can put in there
+```
+
+## 018 — 2026-11-14 (OpenCode · DeepSeek Flash)
+
+```text
+whats ai url, im using openai/gpt-oss-120b
+```
+
+## 019 — 2026-11-14 (OpenCode · DeepSeek Flash)
+
+```text
+database url is in does pgssl have to be true
+```
+
+## 020 — 2026-11-14 (OpenCode · DeepSeek Flash)
+
+```text
+give a log of all prompts used
+```
+
+---
+
+# Part 2 — Claude
+
+## 028 — 2026-11-14 (Claude)
 
 ```text
 claude im working on this software engineering thing and everything works except when you make an account it gives you a token, when the token is used to shop it doesn't load and server crashes
@@ -369,13 +439,21 @@ claude im working on this software engineering thing and everything works except
 
 > Outcome: Claude reproduced it against a local Postgres. Root cause: the view variable `client` collided with EJS's `client` render option, disabling `include()` on shop.ejs. Renamed to `shopper`.
 
-## 008 — 2026-11-14 (Claude)
+## 029 — 2026-11-14 (Claude)
+
+```text
+[uploaded the project as a zip]
+```
+
+> Outcome: Claude ran the app against a local Postgres and reproduced the shop crash (see 028).
+
+## 031 — 2026-11-14 (Claude)
 
 ```text
 give the requirements for the project. can we change the title? whats up w the qr code, can we change st augs location?
 ```
 
-## 009 — 2026-11-14 (Claude)
+## 032 — 2026-11-14 (Claude)
 
 ```text
 this is the problem case, does my web app do this?
@@ -383,7 +461,7 @@ this is the problem case, does my web app do this?
 
 > Outcome: requirements audit. Gaps found: no exit QR/visible session token, queue never advanced, no CSV export (US-5.2), no biometric trends (US-5.1), camera scan unsupported on iPhone/Safari and could not read QR.
 
-## 010 — 2026-11-14 (Claude)
+## 033 — 2026-11-14 (Claude)
 
 ```text
 fix these issues, i have other issues id like to bring to the table as well
@@ -391,7 +469,7 @@ fix these issues, i have other issues id like to bring to the table as well
 
 > Outcome: exit-pass QR + token on shop page; automatic FIFO admission from the waiting line after checkout/exit; de-identified CSV exports (grant ledger, pounds by condition, outcome trends); client_biometrics table + optional baseline readings at enrollment + 3/6-month trend table on the dashboard; self-hosted html5-qrcode scanner (barcodes + QR, works on iPhone) on shop and checkout. Verified end to end on local Postgres; `npm test` 23/23 passing.
 
-## 011 — 2026-11-14 (Claude)
+## 040 — 2026-11-14 (Claude)
 
 ```text
 checkout says processing even though it processed. title is bad, st aug is bad, qty doesnt update u can only by one of each thing, still give access to things they cant buy or shouldnt by but warn them, bar code needs to work/ give demo bar codes, and make customer feel comfortable
@@ -399,7 +477,7 @@ checkout says processing even though it processed. title is bad, st aug is bad, 
 
 > Outcome: Claude reproduced the stuck checkout in a headless browser (CSS `display` on `.btn` overrode the `hidden` attribute; fixed globally). App renamed "Nourish by Epic Cure" via one config file (`src/config/brand.js`), location removed. Cart quantity +/− controls and a PATCH endpoint. Not-recommended items can be added after a gentle confirmation and are still caught by the checkout hard stop (US-4.1). New `/barcodes` page with Code 128 shelf tags for all 107 products and QR client cards; kiosk can scan a card; new sign-ups get a QR card. Shopper wording rewritten in plain language (no ICD codes shown to shoppers). Verified with a Playwright browser test: 20 checks pass, scanner library decodes the generated barcodes and QR codes.
 
-## 012 — 2026-11-14 (Claude)
+## 044 — 2026-11-14 (Claude)
 
 ```text
 works pretty well rn, optional allergens dont show, can we do some other thing other than text boxes for allergen
@@ -407,7 +485,7 @@ works pretty well rn, optional allergens dont show, can we do some other thing o
 
 > Outcome: Claude found that allergy matching was exact text, so typed words like "milk" or "peanut" never matched the catalog flags (`dairy`, `peanuts`). Added `src/lib/allergens.js` (canonical list, synonyms, gluten→wheat), replaced the text box with tap-to-select chips plus an optional "Something else" field, and now show allergies on the shop page and the volunteer checkout screen. 4 new unit tests (27/27 passing) and a browser test of the full sign-up → shop → checkout flow.
 
-## 013 — 2026-11-14 (Claude)
+## 045 — 2026-11-14 (Claude)
 
 ```text
 can you also fix the queue it doesnt work properly i think, i will then put the fixes out
@@ -415,10 +493,98 @@ can you also fix the queue it doesnt work properly i think, i will then put the 
 
 > Outcome: Claude reproduced the queue with four simulated shoppers in a browser. Bugs: the waiting page was rendered at the POST URL (`/kiosk/check-in`), so a refresh showed "Page not found"; shoppers who walked away held floor slots forever; the floor counter could drift; capacity was hard-coded (MAX_FLOOR_CAPACITY ignored). Rebuilt floor/queue as one transaction under a Postgres advisory lock with the counter re-derived from real sessions; strict FIFO; heartbeat (`last_seen_at`) with auto-release after inactivity plus a 1-minute sweep; waiting page now has its own URL, updates live every 5 s, auto-advances to the shop, and backs off on weak Wi-Fi; dashboard panel to set capacity, see the (anonymous) line, and release inactive sessions. Verified: 12 browser scenarios pass; 12 simultaneous check-ins at capacity 3 → exactly 3 on the floor, 9 in line.
 
-## 014 — 2026-11-14 (Claude)
+## 051 — 2026-11-14 (Claude)
+
+```text
+how do we enter the queue
+```
+
+## 052 — 2026-11-14 (Claude)
 
 ```text
 can you implement language and name support/ parameters, and can you also make the queue work. right now if you're in the queue you never get to shop
 ```
 
 > Outcome: Queue root cause: sessions left "active" by earlier testing filled the floor, and adding the `last_seen_at` column stamped them all as fresh with a 2-hour timeout, so people in line waited ~2 hours. Fixes: 20-minute inactivity release (open pages send heartbeats), staff "On the floor" list with End / Clear the floor buttons. Languages: English, Spanish, French, Haitian Creole, Simplified Chinese for every shopper-facing page, message, color label and "why" explanation (228 strings each), header switcher, `?lang=` parameter remembered in a cookie, browser-language detection, AI recipes requested in the shopper's language; staff screens stay English; product names stay English (shelf labels). Names: optional "What should we call you?" (encrypted) used in greetings, preferred language saved at sign-up and applied at check-in, `?name=` pre-fills sign-up, `?code=` pre-fills the kiosk. Verified with browser tests in all 5 languages plus the earlier shopping, allergy and queue tests; 34/34 unit tests pass. Translations were written by Claude and should be reviewed by native speakers.
+
+## 054 — 2026-11-14 (Claude)
+
+```text
+alright side note claude please make this into a docx. this documents all my ai prompts on this project
+```
+
+> Outcome: Prompt-Log.docx, the annotated index of key prompts.
+
+---
+
+# Part 3 — ChatGPT
+
+## 055 — 2026-11-14 (ChatGPT)
+
+```text
+okay it runs, i need to configure db and its throwing a server error
+```
+
+## 056 — 2026-11-14 (ChatGPT)
+
+```text
+i have no .env
+```
+
+## 057 — 2026-11-14 (ChatGPT)
+
+```text
+[provided an environment variable template with DATABASE_URL, PGSSL, SESSION_SECRET, PHI_KEY and AI provider settings; asked what values should be used]
+```
+
+## 058 — 2026-11-14 (ChatGPT)
+
+```text
+give commit messages
+```
+
+## 059 — 2026-11-14 (ChatGPT)
+
+```text
+[pasted Git push output: GitHub Push Protection rejected a commit because a Groq API key was detected in .env.example]
+```
+
+> Outcome: identified a committed secret that had to be removed from Git history and rotated.
+
+## 061 — 2026-11-14 (ChatGPT)
+
+```text
+does pgssl have to be true or false
+```
+
+## 062 — 2026-11-14 (ChatGPT)
+
+```text
+we dont want to run it locally
+```
+
+## 063 — 2026-11-14 (ChatGPT)
+
+```text
+[pasted another failed Git push after deleting .env.example]
+```
+
+> Outcome: deleting the file in a later commit does not remove the secret from the earlier commit.
+
+## 064 — 2026-11-14 (ChatGPT)
+
+```text
+[git checkout HEAD~1 -- webapp/.env.example returned a pathspec error]
+```
+
+## 066 — 2026-11-14 (ChatGPT)
+
+```text
+[requested that the original prompt log be expanded with the additional AI session]
+```
+
+## 067 — 2026-11-14 (ChatGPT)
+
+```text
+bro make a docx with both, note that the paste was opencode using deepseek flash
+```

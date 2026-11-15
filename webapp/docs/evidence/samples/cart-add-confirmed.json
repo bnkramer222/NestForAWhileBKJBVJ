@@ -1,0 +1,42 @@
+{
+  "added": {
+    "contractVersion": "1.0",
+    "sku": "100101",
+    "name": "Bananas",
+    "status": "restricted",
+    "reasons": [
+      "High in potassium — hard on the kidneys."
+    ],
+    "ruleIds": [
+      "ckd-potassium"
+    ],
+    "capServings": null,
+    "source": "clinical-rules",
+    "aisle": "A",
+    "shelf": "1",
+    "bin": "B01",
+    "onHand": 30
+  },
+  "notice": "Bananas is in your cart. A volunteer will check it with you at the exit.",
+  "cart": [
+    {
+      "sku": "100101",
+      "quantity": 1,
+      "evaluated_status": "restricted",
+      "added_at": "2026-11-15T00:59:58.195Z",
+      "name": "Bananas",
+      "category": "produce",
+      "aisle": "A",
+      "shelf": "1",
+      "bin": "B01",
+      "serving_size_g": "118",
+      "status": "restricted",
+      "reasons": [
+        "High in potassium — hard on the kidneys."
+      ],
+      "capServings": null,
+      "overCap": false,
+      "onHand": 30
+    }
+  ]
+}

@@ -1,0 +1,83 @@
+# npm test — 2026-11-15T01:02Z — Node v22.23.4
+
+# [ai] could not log inference DATABASE_URL is not configured
+# [ai] could not log inference DATABASE_URL is not configured
+# [ai] could not log inference DATABASE_URL is not configured
+# [ai] could not log inference DATABASE_URL is not configured
+# [ai] could not log inference DATABASE_URL is not configured
+# Subtest: extractJson handles fenced and chatty output
+ok 1 - extractJson handles fenced and chatty output
+# Subtest: validatePayload enforces contractVersion and recipe shape
+ok 2 - validatePayload enforces contractVersion and recipe shape
+# Subtest: sanitizePayload drops restricted, out-of-stock, and unknown SKUs
+ok 3 - sanitizePayload drops restricted, out-of-stock, and unknown SKUs
+# Subtest: sanitizePayload rejects a recipe that references a restricted SKU
+ok 4 - sanitizePayload rejects a recipe that references a restricted SKU
+# Subtest: unconfigured provider returns the deterministic local synthesis
+ok 5 - unconfigured provider returns the deterministic local synthesis
+# Subtest: groq adapter sends OpenAI-style request with JSON mode and sanitises output
+ok 6 - groq adapter sends OpenAI-style request with JSON mode and sanitises output
+# Subtest: ollama adapter uses /api/chat with format json
+ok 7 - ollama adapter uses /api/chat with format json
+# Subtest: invalid first response triggers exactly one repair turn
+ok 8 - invalid first response triggers exactly one repair turn
+# Subtest: repair exhaustion falls back instead of throwing
+ok 9 - repair exhaustion falls back instead of throwing
+# Subtest: rate limit (429) falls back immediately without retrying
+ok 10 - rate limit (429) falls back immediately without retrying
+# Subtest: provider config defaults to groq when only an API key is present
+ok 11 - provider config defaults to groq when only an API key is present
+# Subtest: requestCompletion reports HTTP failures with status
+ok 12 - requestCompletion reports HTTP failures with status
+# Subtest: everyday words map to catalog allergen keys
+ok 13 - everyday words map to catalog allergen keys
+# Subtest: gluten avoidance also excludes wheat; wheat does not imply gluten
+ok 14 - gluten avoidance also excludes wheat; wheat does not imply gluten
+# Subtest: a typed synonym still flags the product as not a good fit
+ok 15 - a typed synonym still flags the product as not a good fit
+# Subtest: labels are human readable
+ok 16 - labels are human readable
+# Subtest: banana is capped for diabetes (high glycemic)
+ok 17 - banana is capped for diabetes (high glycemic)
+# Subtest: banana is restricted for CKD (potassium > 350 mg)
+ok 18 - banana is restricted for CKD (potassium > 350 mg)
+# Subtest: ramen is restricted for hypertension (sodium > 900 mg)
+ok 19 - ramen is restricted for hypertension (sodium > 900 mg)
+# Subtest: allergen on the profile forces restricted regardless of nutrients
+ok 20 - allergen on the profile forces restricted regardless of nutrients
+# Subtest: restricted beats capped when multiple rules fire
+ok 21 - restricted beats capped when multiple rules fire
+# Subtest: unrestricted produce is approved for hypertension
+ok 22 - unrestricted produce is approved for hypertension
+# Subtest: ICD-10 codes map to clinical keys
+ok 23 - ICD-10 codes map to clinical keys
+# Subtest: known combinations resolve to a canonical tier id
+ok 24 - known combinations resolve to a canonical tier id
+# Subtest: unknown combinations fall back to the composite tier id
+ok 25 - unknown combinations fall back to the composite tier id
+# Subtest: daily needs scale with household size
+ok 26 - daily needs scale with household size
+# Subtest: recommendations exclude restricted items and keep capped ones
+ok 27 - recommendations exclude restricted items and keep capped ones
+# Subtest: es: every English string is translated with the same placeholders
+ok 28 - es: every English string is translated with the same placeholders
+# Subtest: fr: every English string is translated with the same placeholders
+ok 29 - fr: every English string is translated with the same placeholders
+# Subtest: ht: every English string is translated with the same placeholders
+ok 30 - ht: every English string is translated with the same placeholders
+# Subtest: zh: every English string is translated with the same placeholders
+ok 31 - zh: every English string is translated with the same placeholders
+# Subtest: translator fills placeholders and falls back to English, then the key
+ok 32 - translator fills placeholders and falls back to English, then the key
+# Subtest: plan names come from the condition groups
+ok 33 - plan names come from the condition groups
+# Subtest: rule explanations are translated by rule id
+ok 34 - rule explanations are translated by rule id
+# tests 34
+# suites 0
+# pass 34
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 320.883318

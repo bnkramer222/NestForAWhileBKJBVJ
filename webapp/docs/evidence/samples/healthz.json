@@ -1,0 +1,17 @@
+{
+  "status": "ok",
+  "service": "epic-cure-mtg",
+  "version": "0.1.0",
+  "env": "development",
+  "database": {
+    "ok": true,
+    "latencyMs": 5
+  },
+  "aiEngine": {
+    "provider": "none",
+    "model": null,
+    "configured": false,
+    "reason": "no provider configured"
+  },
+  "timestamp": "2026-11-15T00:59:57.895Z"
+}

@@ -1,0 +1,7 @@
+# Team Reflection
+
+As a team, we learned a lot through this challenge. We learned the ins and outs of using free AI, the difficulty of guiding AI to do a task, and splitting tasks so we can tackle everything efficiently. The way we started was a big mess; we hurried and rushed to understand what to do. We were scared about which AI model to use, considering that we have individual usage with certain models but not with every model. After hearing lots of different messages from passing mentors, our group decided on a variety of models. We tried something difficult first, downloading open code and using a free API key to work on our project as a baseline. While this worked very effectively, it was slow and burned so many credits we ended up expanding.  
+
+ 
+
+Situations like these showed us that we needed to adapt and grow. So, following this event, we properly divided the work; one of us mainly worked on baseline things, i.e. setting up the architecture, while others worked on the database and AI usage. Even once we thought we had things running, it was never as it seemed, as we came to learn. That is a frequent thing we found out about AI. We all came from this experience understanding the raw power that is AI, however, we also know that it is a tool, and it is just as good as the coder. Which is why we spent hours upon hours refining our product. Our main takeaway is that with a good AI and a better group, we can achieve greatness in our field.  

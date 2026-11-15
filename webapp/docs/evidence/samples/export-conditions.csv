@@ -1,0 +1,6 @@
+month,condition_group,food_category,units,weight_lbs
+2026-11-01,ckd,dairy,8,3.000
+2026-11-01,ckd,produce,3,0.860
+2026-11-01,diabetes,produce,1,0.260
+2026-11-01,hypertension,dairy,8,3.000
+2026-11-01,hypertension,produce,4,1.120

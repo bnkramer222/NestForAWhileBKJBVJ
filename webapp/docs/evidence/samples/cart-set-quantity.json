@@ -1,0 +1,41 @@
+{
+  "notice": null,
+  "cart": [
+    {
+      "sku": "100101",
+      "quantity": 1,
+      "evaluated_status": "restricted",
+      "added_at": "2026-11-15T00:59:58.195Z",
+      "name": "Bananas",
+      "category": "produce",
+      "aisle": "A",
+      "shelf": "1",
+      "bin": "B01",
+      "serving_size_g": "118",
+      "status": "restricted",
+      "reasons": [
+        "High in potassium — hard on the kidneys."
+      ],
+      "capServings": null,
+      "overCap": false,
+      "onHand": 30
+    },
+    {
+      "sku": "100103",
+      "quantity": 3,
+      "evaluated_status": "approved",
+      "added_at": "2026-11-15T00:59:58.222Z",
+      "name": "Sweet potatoes",
+      "category": "produce",
+      "aisle": "A",
+      "shelf": "2",
+      "bin": "B03",
+      "serving_size_g": "130",
+      "status": "approved",
+      "reasons": [],
+      "capServings": null,
+      "overCap": false,
+      "onHand": 30
+    }
+  ]
+}

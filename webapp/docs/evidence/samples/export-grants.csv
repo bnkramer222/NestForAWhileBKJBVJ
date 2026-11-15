@@ -1,0 +1,4 @@
+month,funder,grant_code,food_category,clinical_status,units,weight_lbs
+2026-11-01,HHS Food is Medicine,FIM-2026-041,dairy,approved,8,3.000
+2026-11-01,HHS Food is Medicine,FIM-2026-041,produce,approved,3,0.860
+2026-11-01,HHS Food is Medicine,FIM-2026-041,produce,capped,1,0.260

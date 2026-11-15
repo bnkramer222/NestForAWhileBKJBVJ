@@ -1,0 +1,24 @@
+{
+  "error": "Please confirm before adding this item.",
+  "details": {
+    "code": "CONFIRM_RESTRICTED",
+    "item": {
+      "contractVersion": "1.0",
+      "sku": "100101",
+      "name": "Bananas",
+      "status": "restricted",
+      "reasons": [
+        "High in potassium — hard on the kidneys."
+      ],
+      "ruleIds": [
+        "ckd-potassium"
+      ],
+      "capServings": null,
+      "source": "clinical-rules",
+      "aisle": "A",
+      "shelf": "1",
+      "bin": "B01",
+      "onHand": 30
+    }
+  }
+}

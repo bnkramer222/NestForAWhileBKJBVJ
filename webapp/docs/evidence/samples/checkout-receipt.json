@@ -1,0 +1,19 @@
+{
+  "receipt": {
+    "transactionId": "0010b09c-0f76-49b6-ad46-e24637074599",
+    "createdAt": "2026-11-15T01:00:09.247Z",
+    "itemCount": 1,
+    "totalWeightLbs": 0.86,
+    "lines": [
+      {
+        "sku": "100103",
+        "quantity": 3,
+        "evaluated_status": "approved",
+        "name": "Sweet potatoes",
+        "serving_size_g": "130",
+        "category": "produce"
+      }
+    ]
+  },
+  "admittedFromQueue": 0
+}

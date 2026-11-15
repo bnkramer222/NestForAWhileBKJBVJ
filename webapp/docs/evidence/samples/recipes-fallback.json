@@ -1,0 +1,87 @@
+{
+  "recipes": [
+    {
+      "title": "Apples & Beef sirloin",
+      "uses": [
+        "100212",
+        "100104",
+        "100416"
+      ],
+      "steps": [
+        "Pat the beef sirloin dry and season with herbs instead of salt.",
+        "Sear until cooked through, then rest for 5 minutes.",
+        "Sauté apples in a little oil until bright and tender.",
+        "Serve over cooked brown rice pasta."
+      ],
+      "clinicalFit": "Built only from items approved for this clinical profile."
+    },
+    {
+      "title": "Asparagus grain bowl",
+      "uses": [
+        "100124",
+        "100416",
+        "100201"
+      ],
+      "steps": [
+        "Cook brown rice pasta according to package directions, without added salt.",
+        "Toss asparagus with lemon, olive oil, and pepper.",
+        "Top with boneless chicken breast."
+      ],
+      "clinicalFit": "Low-sodium base with fibre-rich whole grains."
+    },
+    {
+      "title": "Sheet-pan bell peppers with beef sirloin",
+      "uses": [
+        "100111",
+        "100212"
+      ],
+      "steps": [
+        "Heat oven to 425°F. Toss produce with oil, pepper, and smoked paprika.",
+        "Roast 20 minutes, adding the protein for the last 12 minutes.",
+        "Rest, then finish with a squeeze of citrus."
+      ],
+      "clinicalFit": "No added salt; spices and citrus carry the flavour."
+    }
+  ],
+  "missingIngredients": [
+    {
+      "sku": "100212",
+      "name": "Beef sirloin",
+      "aisle": "B",
+      "shelf": "6",
+      "bin": "B12",
+      "onHand": 30
+    },
+    {
+      "sku": "100201",
+      "name": "Boneless chicken breast",
+      "aisle": "B",
+      "shelf": "1",
+      "bin": "B01",
+      "onHand": 30
+    },
+    {
+      "sku": "100104",
+      "name": "Apples",
+      "aisle": "A",
+      "shelf": "2",
+      "bin": "B04",
+      "onHand": 30
+    },
+    {
+      "sku": "100124",
+      "name": "Asparagus",
+      "aisle": "A",
+      "shelf": "12",
+      "bin": "B24",
+      "onHand": 30
+    }
+  ],
+  "source": "local-deterministic",
+  "provider": "none",
+  "model": null,
+  "errors": [
+    "no provider configured"
+  ],
+  "contractVersion": "1.0"
+}

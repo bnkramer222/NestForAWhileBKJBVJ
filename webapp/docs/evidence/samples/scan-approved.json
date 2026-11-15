@@ -1,0 +1,18 @@
+{
+  "item": {
+    "contractVersion": "1.0",
+    "sku": "100103",
+    "name": "Sweet potatoes",
+    "status": "approved",
+    "reasons": [],
+    "ruleIds": [],
+    "capServings": null,
+    "source": "clinical-rules",
+    "aisle": "A",
+    "shelf": "2",
+    "bin": "B03",
+    "onHand": 30
+  },
+  "quantityInCart": 0,
+  "sessionToken": "ses_[redacted]"
+}
