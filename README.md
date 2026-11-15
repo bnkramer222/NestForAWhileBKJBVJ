@@ -8,7 +8,8 @@ companion that color-codes every item for their health, get meal ideas from what
 and leave through a volunteer exit terminal that stops contraindicated food before stock is
 decremented.
 
-**Live demo:** _add your Render URL here_ · **Code:** [`webapp/`](webapp/) · **Prompt log:**
+**Live demo:** postgresql://nest4awhie_bkjbvj_user:RDayo2Cz3HXmGxfBgVRzUw7lryxcu6Hh@dpg-dbsa04mc6qcc738jq4pg-a.oregon-postgres.render.com/nest4awhie_bkjbvj
+PGSSL=true · **Code:** [`webapp/`](webapp/) · **Prompt log:**
 [`webapp/PROMPTS.md`](webapp/PROMPTS.md) · **Evidence:** [`webapp/docs/evidence/`](webapp/docs/evidence/README.md) ·
 **Reflection:** [`REFLECTION.md`](REFLECTION.md)
 
